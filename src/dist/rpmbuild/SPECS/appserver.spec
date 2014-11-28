@@ -27,8 +27,6 @@ Provides:   appserver-dist
 /opt/appserver/*
 /lib/systemd/system/*
 
-%changelog
-
 %config
 /opt/appserver/etc/appserver/appserver.xml
 

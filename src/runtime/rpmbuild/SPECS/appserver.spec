@@ -26,8 +26,6 @@ Provides:   appserver-runtime
 %files
 /opt/appserver/*
 
-%changelog
-
 %post
 # Reload shared library list
 ldconfig
