@@ -27,9 +27,6 @@ Provides:   appserver-dist
 /opt/appserver/*
 /lib/systemd/system/*
 
-%config(missingok)
-/opt/appserver/etc/appserver/appserver.xml
-
 %post
 # Reload shared library list
 ldconfig
