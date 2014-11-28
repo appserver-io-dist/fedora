@@ -85,6 +85,7 @@
         <get src="${appserver.apps.example.url}" dest="${target.dir}/opt/appserver/deploy/example.phar" />
         <!-- create the .dodeploy files -->
         <touch file="${target.dir}//opt/appserver/deploy/example.phar.dodeploy" />
+
         <!-- copy packaging build files to target -->
         <copy todir="${target.dir}">
             <fileset dir="${src.dir}/dist">
@@ -108,7 +109,7 @@
     <target name="create-appserver-dist-rpm" depends="prepare-appserver-dist" description="Creates a RPM package with appserver sources">
         <!-- create the .rpm file -->
         <exec dir="${target.dir}" executable="rpmbuild" failonerror="true">
-            <arg line="--buildroot ${target.dir}/re -bb ${target.dir}/rpmbuild/SPECS/appserver.spec"/>
+            <arg line="--buildroot ${build.dir}/re -bb ${target.dir}/rpmbuild/SPECS/appserver.spec"/>
         </exec>
     </target>
 
@@ -127,9 +128,10 @@
             <arg value="-C"/>
             <arg value="${target.dir}/opt"/>
         </exec>
+
         <!-- copy packaging build files to target -->
         <copy todir="${target.dir}">
-            <fileset dir="${src.dir}/dist">
+            <fileset dir="${src.dir}/runtime">
                 <include name="rpmbuild/**"/>
             </fileset>
             <filterchain>
@@ -137,8 +139,10 @@
             </filterchain>
         </copy>
 
-        <!-- will create the actual rpm -->
-        <antcall target="create-appserver-dist-rpm" />
+        <!-- create the .rpm file -->
+        <exec dir="${target.dir}" executable="rpmbuild" failonerror="true">
+            <arg line="--buildroot ${build.dir}/re -bb ${target.dir}/rpmbuild/SPECS/appserver.spec"/>
+        </exec>
     </target>
 
     <!-- ==================================================================== -->

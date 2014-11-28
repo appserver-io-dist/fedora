@@ -3,15 +3,16 @@
 %define          debug_package %{nil}
 %define        __os_install_post %{_dbpath}/brp-compress
 
-Name:		appserver
-Version:	${appserver.version}
-Release:	${appserver.version.suffix}${build.number}.${os.qualified.name}
-Summary:	Multithreaded Application Server für PHP, geschrieben in PHP
-Group:		System Environment/Base
-License:	OSL 3.0
-URL:		www.appserver.io
-requires:   git, libmcrypt
-Provides:   appserver
+Name:       ${build.name.prefix}dist
+Version:    ${appserver.src.version}
+Release:    ${build.number}${build.name.suffix}
+Summary:    appserver.io provides a multithreaded application server for PHP.
+Group:      System Environment/Base
+License:    OSL 3.0
+Vendor:     Bernhard Wick bw@appserver.io
+URL:        http://appserver.io
+requires:   appserver-runtime
+Provides:   appserver-dist
 
 %description
 %{summary}
@@ -28,14 +29,17 @@ Provides:   appserver
 
 %changelog
 
+%config
+/opt/appserver/etc/appserver/appserver.xml
+
 %post
 # Reload shared library list
 ldconfig
 
 # Set needed files as accessable for the configured user
-chown -R ${appserver.user}:${appserver.group} /opt/appserver/var
-chown -R ${appserver.user}:${appserver.group} /opt/appserver/webapps
-chown -R ${appserver.user}:${appserver.group} /opt/appserver/deploy
+chown -R nobody:nobody /opt/appserver/var
+chown -R nobody:nobody /opt/appserver/webapps
+chown -R nobody:nobody /opt/appserver/deploy
 
 # Make the link to our system systemd file
 ln -s /lib/systemd/system/appserver.service /etc/systemd/system/appserver.service
@@ -48,12 +52,22 @@ ln -s /opt/appserver/bin/composer.phar /opt/appserver/bin/composer
 # Reload the systemd daemon
 systemctl daemon-reload
 
-# Start the appserver + watcher
+# run postinstall script from appserver-io/appserver composer package
+# to set correct path for specific startup scripts
+cd /opt/appserver
+./bin/php ./bin/composer.phar run-script post-install-cmd
+
+# Start the appserver + watcher + fpm
 systemctl start appserver.service
 systemctl start appserver-watcher.service
 systemctl start appserver-php5-fpm.service
 
-# Make them autostartable for the current runlevel
-systemctl enable appserver.service
-systemctl enable appserver-watcher.service
-systemctl enable appserver-php5-fpm.service
+%preun
+# Stop the appserver + watcher + fpm
+systemctl stop appserver.service
+systemctl stop appserver-watcher.service
+systemctl stop appserver-php5-fpm.service
+
+%postun
+# Reload shared library list
+ldconfig
