@@ -108,7 +108,7 @@
     <target name="create-appserver-dist-rpm" depends="prepare-appserver-dist" description="Creates a RPM package with appserver sources">
         <!-- create the .rpm file -->
         <exec dir="${target.dir}" executable="rpmbuild" failonerror="true">
-            <arg line="--buildroot ${target.dir}/re -bb ${target.dir}/appserver.spec"/>
+            <arg line="--buildroot ${target.dir}/re -bb ${target.dir}/rpmbuild/SPECS/appserver.spec"/>
         </exec>
     </target>
 
