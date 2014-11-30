@@ -5,7 +5,7 @@
 
 Name:       ${build.name.prefix}runtime
 Version:    ${appserver.runtime.version}
-Release:    ${build.name.suffix}
+Release:    ${appserver.runtime.suffix}${build.name.suffix}
 Summary:    appserver.io provides a multithreaded application server for PHP.
 Group:      System Environment/Base
 License:    OSL 3.0
