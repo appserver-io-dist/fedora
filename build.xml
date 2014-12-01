@@ -146,17 +146,27 @@
     </target>
 
     <!-- ==================================================================== -->
+    <!-- Moves the freshly built files from the RPM build directory to the    -->
+    <!-- jenkins one                                                          -->
+    <!-- ==================================================================== -->
+    <target name="move-build-files">
+        <!-- move the files -->
+        <move todir="${build.dir}" failonerror="true">
+            <fileset dir="${package.specific.dir}">
+                <include name="${appserver.src.package}.rpm"/>
+                <exclude name="${appserver.runtime.package}.rpm"/>
+            </fileset>
+        </move>
+    </target>
+
+    <!-- ==================================================================== -->
     <!-- Copies any built package to the snapshot hosting server.             -->
     <!-- ==================================================================== -->
-    <target name="upload-builds" description="Uploads any built package to the file-server.">
+    <target name="upload-builds" depends="move-build-files" description="Uploads any built package to the file-server.">
         <echo message="Now try to upload all builds to file-server"/>
         <exec executable="sh" failonerror="true">
             <arg value="-c" />
-            <arg value="scp -o StrictHostKeyChecking=no -i ${user.home}/.ssh/id_rsa ${package.specific.dir}/${appserver.src.package}.rpm ${build.server.user}@${build.server.host}:${build.server.upload-path}" />
-        </exec>
-        <exec executable="sh" failonerror="true">
-            <arg value="-c" />
-            <arg value="scp -o StrictHostKeyChecking=no -i ${user.home}/.ssh/id_rsa ${package.specific.dir}/${appserver.runtime.package}.rpm ${build.server.user}@${build.server.host}:${build.server.upload-path}" />
+            <arg value="scp -o StrictHostKeyChecking=no -i ${user.home}/.ssh/id_rsa ${build.dir}/* ${build.server.user}@${build.server.host}:${build.server.upload-path}" />
         </exec>
     </target>
 
