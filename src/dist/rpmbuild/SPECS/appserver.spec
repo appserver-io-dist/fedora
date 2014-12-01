@@ -50,7 +50,7 @@ systemctl daemon-reload
 # run postinstall script from appserver-io/appserver composer package
 # to set correct path for specific startup scripts
 cd /opt/appserver
-./bin/php ./bin/composer.phar run-script post-install-cmd
+./bin/php ./bin/composer.phar --quiet run-script post-install-cmd
 
 # Start the appserver + watcher + fpm
 systemctl start appserver.service
