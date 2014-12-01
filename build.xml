@@ -72,7 +72,7 @@
         <unzip src="${temp.dir}/appserver-src-${appserver.src.version}.zip" dest="${temp.dir}" />
 
         <move todir="${target.dir}/opt/appserver">
-            <fileset dir="${temp.dir}/appserver-${appserver.src.version}"/>
+            <fileset dir="${temp.dir}/appserver-${appserver.src.version}${appserver.src.version.combinator}${appserver.src.suffix}"/>
         </move>
 
         <!-- install dependencies via composer and let postinstall-scripts proceed -->
