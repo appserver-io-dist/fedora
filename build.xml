@@ -76,7 +76,7 @@
         </move>
 
         <!-- install dependencies via composer and let postinstall-scripts proceed -->
-        <exec dir="${target.dir}/opt/appserver" executable="${target.dir}/opt/appserver/bin/php">
+        <exec dir="${target.dir}/opt/appserver" executable="php">
             <arg line="${temp.dir}/composer.phar install --prefer-dist --quiet --no-interaction --ignore-platform-reqs"/>
         </exec>
         <!-- create deploy folder if not exists -->
