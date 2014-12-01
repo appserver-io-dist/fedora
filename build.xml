@@ -151,12 +151,8 @@
     <!-- ==================================================================== -->
     <target name="move-build-files">
         <!-- move the files -->
-        <move todir="${build.dir}" failonerror="true">
-            <fileset dir="${package.specific.dir}">
-                <include name="**/${appserver.src.package}.rpm"/>
-                <exclude name="**/${appserver.runtime.package}.rpm"/>
-            </fileset>
-        </move>
+        <move file="${package.specific.dir}/${appserver.src.package}.rpm" todir="${build.dir}" failonerror="true"/>
+        <move file="${package.specific.dir}/${appserver.runtime.package}.rpm" todir="${build.dir}" failonerror="true"/>
     </target>
 
     <!-- ==================================================================== -->
