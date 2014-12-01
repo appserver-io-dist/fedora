@@ -153,8 +153,8 @@
         <!-- move the files -->
         <move todir="${build.dir}" failonerror="true">
             <fileset dir="${package.specific.dir}">
-                <include name="${appserver.src.package}.rpm"/>
-                <exclude name="${appserver.runtime.package}.rpm"/>
+                <include name="**/${appserver.src.package}.rpm"/>
+                <exclude name="**/${appserver.runtime.package}.rpm"/>
             </fileset>
         </move>
     </target>
