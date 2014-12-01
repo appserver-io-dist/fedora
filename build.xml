@@ -118,12 +118,12 @@
     <!-- ==================================================================== -->
     <target name="create-appserver-runtime-rpm" depends="prepare">
         <!-- get runtime in specific version as tar.gz -->
-        <get src="${appserver.runtime.url}" dest="${temp.dir}/${build.name.prefix}runtime-${appserver.runtime.version}${build.name.suffix}.tar.gz"/>
-        <untar src="${temp.dir}/${build.name.prefix}runtime-${appserver.runtime.version}${build.name.suffix}.tar.gz" dest="${target.dir}/opt" compression="gzip" />
+        <get src="${appserver.runtime.url}" dest="${temp.dir}/${appserver.runtime.package}.tar.gz"/>
+        <untar src="${temp.dir}/${appserver.runtime.package}.tar.gz" dest="${target.dir}/opt" compression="gzip" />
         <mkdir dir="${target.dir}/opt" />
         <exec executable="tar">
             <arg value="-xzf"/>
-            <arg value="${temp.dir}/${build.name.prefix}runtime-${appserver.runtime.version}${build.name.suffix}.tar.gz"/>
+            <arg value="${temp.dir}/${appserver.runtime.package}.tar.gz"/>
             <arg value="-p"/>
             <arg value="-C"/>
             <arg value="${target.dir}/opt"/>
@@ -146,9 +146,19 @@
     </target>
 
     <!-- ==================================================================== -->
+    <!-- Moves the freshly built files from the RPM build directory to the    -->
+    <!-- jenkins one                                                          -->
+    <!-- ==================================================================== -->
+    <target name="move-build-files">
+        <!-- move the files -->
+        <move file="${package.specific.dir}/${appserver.src.package}.rpm" todir="${build.dir}" failonerror="true"/>
+        <move file="${package.specific.dir}/${appserver.runtime.package}.rpm" todir="${build.dir}" failonerror="true"/>
+    </target>
+
+    <!-- ==================================================================== -->
     <!-- Copies any built package to the snapshot hosting server.             -->
     <!-- ==================================================================== -->
-    <target name="upload-builds" description="Uploads any built package to the file-server.">
+    <target name="upload-builds" depends="move-build-files" description="Uploads any built package to the file-server.">
         <echo message="Now try to upload all builds to file-server"/>
         <exec executable="sh" failonerror="true">
             <arg value="-c" />
