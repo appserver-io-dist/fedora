@@ -31,7 +31,7 @@ Provides:   appserver-runtime
 ldconfig
 
 # Create composer symlink
-ln -s /opt/appserver/bin/composer.phar /opt/appserver/bin/composer
+ln -sf /opt/appserver/bin/composer.phar /opt/appserver/bin/composer
 
 %postun
 # Reload shared library list

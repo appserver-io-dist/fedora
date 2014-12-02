@@ -28,6 +28,7 @@ Provides:   appserver-dist
 /lib/systemd/system/*
 
 %post
+
 # Reload shared library list
 ldconfig
 
@@ -37,20 +38,20 @@ chown -R nobody:nobody /opt/appserver/webapps
 chown -R nobody:nobody /opt/appserver/deploy
 
 # Make the link to our system systemd file
-ln -s /lib/systemd/system/appserver.service /etc/systemd/system/appserver.service
-ln -s /lib/systemd/system/appserver-watcher.service /etc/systemd/system/appserver-watcher.service
-ln -s /lib/systemd/system/appserver-php5-fpm.service /etc/systemd/system/appserver-php5-fpm.service
+ln -sf /lib/systemd/system/appserver.service /etc/systemd/system/appserver.service
+ln -sf /lib/systemd/system/appserver-watcher.service /etc/systemd/system/appserver-watcher.service
+ln -sf /lib/systemd/system/appserver-php5-fpm.service /etc/systemd/system/appserver-php5-fpm.service
 
 # Create composer symlink
-ln -s /opt/appserver/bin/composer.phar /opt/appserver/bin/composer
+ln -sf /opt/appserver/bin/composer.phar /opt/appserver/bin/composer
 
 # Reload the systemd daemon
 systemctl daemon-reload
 
-# run postinstall script from appserver-io/appserver composer package
-# to set correct path for specific startup scripts
-cd /opt/appserver
-./bin/php ./bin/composer.phar run-script post-install-cmd
+# run postinstall script from appserver-io/appserver composer package to set correct path for specific startup scripts.
+# we have to set the composer home dir manually to avoid problems while installing within a GUI
+export COMPOSER_HOME=/tmp/.composer
+cd /opt/appserver && ./bin/php ./bin/composer.phar run-script post-install-cmd
 
 # Start the appserver + watcher + fpm
 systemctl start appserver.service
