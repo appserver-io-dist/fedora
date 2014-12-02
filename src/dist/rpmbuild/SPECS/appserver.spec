@@ -28,6 +28,7 @@ Provides:   appserver-dist
 /lib/systemd/system/*
 
 %post
+
 # Reload shared library list
 ldconfig
 
@@ -37,12 +38,12 @@ chown -R nobody:nobody /opt/appserver/webapps
 chown -R nobody:nobody /opt/appserver/deploy
 
 # Make the link to our system systemd file
-ln -s /lib/systemd/system/appserver.service /etc/systemd/system/appserver.service
-ln -s /lib/systemd/system/appserver-watcher.service /etc/systemd/system/appserver-watcher.service
-ln -s /lib/systemd/system/appserver-php5-fpm.service /etc/systemd/system/appserver-php5-fpm.service
+ln -sf /lib/systemd/system/appserver.service /etc/systemd/system/appserver.service
+ln -sf /lib/systemd/system/appserver-watcher.service /etc/systemd/system/appserver-watcher.service
+ln -sf /lib/systemd/system/appserver-php5-fpm.service /etc/systemd/system/appserver-php5-fpm.service
 
 # Create composer symlink
-ln -s /opt/appserver/bin/composer.phar /opt/appserver/bin/composer
+ln -sf /opt/appserver/bin/composer.phar /opt/appserver/bin/composer
 
 # Reload the systemd daemon
 systemctl daemon-reload
@@ -50,7 +51,7 @@ systemctl daemon-reload
 # run postinstall script from appserver-io/appserver composer package
 # to set correct path for specific startup scripts
 cd /opt/appserver
-./bin/php ./bin/composer.phar --quiet run-script post-install-cmd
+./bin/php ./bin/composer.phar run-script post-install-cmd 1>&2 >> /tmp/test.txt
 
 # Start the appserver + watcher + fpm
 systemctl start appserver.service
