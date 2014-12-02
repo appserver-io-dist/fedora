@@ -4,8 +4,8 @@
 %define        __os_install_post %{_dbpath}/brp-compress
 
 Name:       ${build.name.prefix}dist
-Version:    ${appserver.src.version}
-Release:    ${appserver.src.suffix}${build.number}${build.name.suffix}
+Version:    ${appserver.src.semver}
+Release:    ${appserver.src.suffix}.${build.number}${build.name.suffix}
 Summary:    appserver.io provides a multithreaded application server for PHP.
 Group:      System Environment/Base
 License:    OSL 3.0
