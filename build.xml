@@ -71,9 +71,15 @@
             <arg line="clone https://${github.oauth.token}:x-oauth-basic@github.com/${appserver.src.repo} appserver-src" />
         </exec>
         <!-- get lastest tag version -->
-        <exec dir="${temp.dir}/appserver-src" executable="git" outputProperty="appserver.src.version">
+        <exec dir="${temp.dir}/appserver-src" executable="git" outputProperty="appserver.src.tmp-version">
             <arg line="describe --abbrev=0 --tags" />
         </exec>
+
+        <antcallback target="filter-version">
+            <param name="param1" value="This is a normal line that doesn't say much"/>
+        </antcallback>
+        <echo>a = ${allUpperCase}</echo>
+
         <echo message="Checkout lastest tag version ${appserver.src.version}" />
         <!-- checkout lastest tag version -->
         <exec dir="${temp.dir}/appserver-src" executable="git">
@@ -152,6 +158,37 @@
         <exec dir="${target.dir}" executable="rpmbuild" failonerror="true">
             <arg line="--buildroot ${target.dir} -bb ${target.dir}/rpmbuild/SPECS/appserver.spec"/>
         </exec>
+    </target>
+
+    <target name="filter-version">
+        <property name="param" value="1.0.0-beta"/>
+
+        <!-- using Javascript functions to convert the string -->
+        <script language="javascript"> <![CDATA[
+
+        // getting the param
+        var param = project.getProperty("foo");
+
+        // preset the return values
+        var resultVersion = param;
+        var resultBuildNumber = '';
+
+        // split if necessary
+        if (param.indexOf("-") !== -1) {
+
+            resultVersion = param.substring(0, param.indexOf("-"));
+            resultBuildNumber = param.substring(param.indexOf("-"), str.length - 1);
+        }
+
+        // store the result in a new property
+        project.setProperty("result.version",resultVersion);
+        project.setProperty("result.build-number",resultBuildNumber);
+
+    ]]> </script>
+
+        <!-- Display the values -->
+        <echo>resultVersion=${result.version}</echo>
+        <echo>resultBuildNumber=${result.build-number}</echo>
     </target>
 
     <!-- ==================================================================== -->
