@@ -48,10 +48,10 @@ ln -sf /opt/appserver/bin/composer.phar /opt/appserver/bin/composer
 # Reload the systemd daemon
 systemctl daemon-reload
 
-# run postinstall script from appserver-io/appserver composer package
-# to set correct path for specific startup scripts
+# run postinstall script from appserver-io/appserver composer package to set correct path for specific startup scripts.
+# we have to set the composer home dir manually to avoid problems while installing within a GUI
 export COMPOSER_HOME=/tmp/.composer
-cd /opt/appserver && ./bin/php ./bin/composer.phar run-script post-install-cmd >> /tmp/test.txt 2>&1
+cd /opt/appserver && ./bin/php ./bin/composer.phar run-script post-install-cmd
 
 # Start the appserver + watcher + fpm
 systemctl start appserver.service
