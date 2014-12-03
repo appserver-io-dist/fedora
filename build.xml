@@ -100,13 +100,7 @@
     <!-- ==================================================================== -->
     <!-- Creates a RPM package with the appserver sources                     -->
     <!-- ==================================================================== -->
-    <target name="create-appserver-dist-rpm" depends="prepare-appserver-dist" description="Creates a RPM package with appserver sources">
-
-        <!-- split up the version string -->
-        <filter-version param="${appserver.src.version}" />
-        <property name="appserver.src.semver" value="${RESULT_VERSION}" />
-        <property name="appserver.src.suffix" value="${RESULT_BUILD-NUMBER}" />
-
+    <target name="create-appserver-dist-rpm" depends="prepare-appserver-dist, prepare-src-version-parts" description="Creates a RPM package with appserver sources">
         <!-- copy packaging build files to target -->
         <copy todir="${target.dir}/src">
             <fileset dir="${src.dir}/dist">
@@ -132,7 +126,7 @@
     <!-- ==================================================================== -->
     <!-- Creates a RPM package for the appserver runtime                      -->
     <!-- ==================================================================== -->
-    <target name="create-appserver-runtime-rpm" depends="prepare">
+    <target name="create-appserver-runtime-rpm" depends="prepare, prepare-runtime-version-parts">
         <!-- get runtime in specific version as tar.gz -->
         <get src="${appserver.runtime.url}" dest="${temp.dir}/${build.name.prefix}runtime-${appserver.runtime.version}${build.name.suffix}.tar.gz"/>
         <untar src="${temp.dir}/${build.name.prefix}runtime-${appserver.runtime.version}${build.name.suffix}.tar.gz" dest="${target.dir}/opt" compression="gzip" />
@@ -144,11 +138,6 @@
             <arg value="-C"/>
             <arg value="${target.dir}/opt"/>
         </exec>
-
-        <!-- split up the version string -->
-        <filter-version param="${appserver.runtime.version}" />
-        <property name="appserver.runtime.semver" value="${RESULT_VERSION}" />
-        <property name="appserver.runtime.suffix" value="${RESULT_BUILD-NUMBER}" />
 
         <!-- copy packaging build files to target -->
         <copy todir="${target.dir}/runtime">
@@ -164,6 +153,62 @@
         <exec dir="${target.dir}" executable="rpmbuild" failonerror="true">
             <arg line="--buildroot ${target.dir} -bb ${target.dir}/runtime/rpmbuild/SPECS/appserver.spec"/>
         </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will check if a download of the appserver src is needed              -->
+    <!-- ==================================================================== -->
+    <target name="check-appserver-src-needed">
+        <!-- clone appserver src -->
+        <condition property="appserver.src.unneeded">
+            <or>
+                <available file="${temp.dir}/appserver-src" property="appserver.src.present"/>
+                <isset property="appserver.src.version"/>
+            </or>
+        </condition>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will download the appserver src unless it is not needed              -->
+    <!-- ==================================================================== -->
+    <target name="get-appserver-src" depends="check-appserver-src-needed" unless="appserver.src.unneeded">
+        <!-- clone appserver src -->
+        <exec dir="${temp.dir}" executable="git">
+            <arg line="clone https://${github.oauth.token}:x-oauth-basic@github.com/${appserver.src.repo} appserver-src" />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will provide the appserver.src.version property if not defined       -->
+    <!-- already                                                              -->
+    <!-- ==================================================================== -->
+    <target name="get-appserver-src-version" depends="get-appserver-src">
+        <!-- get lastest tag version -->
+        <exec dir="${temp.dir}/appserver-src" executable="git" outputProperty="appserver.src.version">
+            <arg line="describe --abbrev=0 --tags" />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will split the github tag into a semver version (e.g. 1.0.0) and a   -->
+    <!-- suffix (e.g. beta)                                                   -->
+    <!-- ==================================================================== -->
+    <target name="prepare-src-version-parts" depends="get-appserver-src-version">
+        <!-- filter the version string -->
+        <filter-version param="${appserver.src.version}" />
+        <property name="appserver.src.semver" value="${RESULT_VERSION}" />
+        <property name="appserver.src.suffix" value="${RESULT_BUILD-NUMBER}" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will split the github tag into a semver version (e.g. 1.0.0) and a   -->
+    <!-- suffix (e.g. beta)                                                   -->
+    <!-- ==================================================================== -->
+    <target name="prepare-runtime-version-parts">
+        <!-- filter the version string -->
+        <filter-version param="${appserver.runtime.version}" />
+        <property name="appserver.runtime.semver" value="${RESULT_VERSION}" />
+        <property name="appserver.runtime.suffix" value="${RESULT_BUILD-NUMBER}" />
     </target>
 
     <!-- ==================================================================== -->
@@ -196,10 +241,10 @@
     <!-- Moves the freshly built files from the RPM build directory to the    -->
     <!-- jenkins one                                                          -->
     <!-- ==================================================================== -->
-    <target name="move-build-files">
+    <target name="move-build-files" depends="prepare-src-version-parts, prepare-runtime-version-parts">
         <!-- move the files -->
-        <move file="${package.specific.dir}/${build.name.prefix}dist-${appserver.src.semver}-${appserver.src.suffix}.${build.number}${build.name.suffix}.rpm" todir="${build.dir}" failonerror="true"/>
-        <move file="${package.specific.dir}/${build.name.prefix}runtime-${appserver.runtime.semver}${appserver.runtime.suffix}${build.name.suffix}.rpm" todir="${build.dir}" failonerror="true"/>
+        <move file="${package.specific.dir}/${build.name.prefix}dist-${appserver.src.version}.${build.number}${build.name.suffix}.${os.architecture}.rpm" todir="${build.dir}" failonerror="true"/>
+        <move file="${package.specific.dir}/${build.name.prefix}runtime-${appserver.runtime.version}${build.name.suffix}.${os.architecture}.rpm" todir="${build.dir}" failonerror="true"/>
     </target>
 
     <!-- ==================================================================== -->
