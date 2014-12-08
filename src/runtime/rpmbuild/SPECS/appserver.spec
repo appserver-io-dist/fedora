@@ -39,6 +39,10 @@ ldconfig
 # Create composer symlink
 ln -sf /opt/appserver/bin/composer.phar /opt/appserver/bin/composer
 
+# do the calling home for statistics
+user_id = uuidgen
+curl -X POST --user-agent "${analytics.user.agent}" --data "v=1&tid=${analytics.runtime.property-id}&an=appserver-runtime&t=screenview&cid=$user_id&av=${appserver.src.version}&aid=${analytics.app.id}&aiid=${analytics.app.installer}&cd=installation" ${analytics.base.url}
+
 %postun
 # Reload shared library list
 ldconfig
