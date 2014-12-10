@@ -53,10 +53,6 @@ systemctl daemon-reload
 export COMPOSER_HOME=/tmp/.composer
 cd /opt/appserver && ./bin/php ./bin/composer.phar run-script post-install-cmd
 
-# do the calling home for statistics
-user_id = uuidgen
-curl -X POST --user-agent "${analytics.user.agent}" --data "v=1&tid=${analytics.dist.property-id}&an=appserver-dist&t=screenview&cid=$user_id&av=${appserver.src.version}&aid=${analytics.app.id}&aiid=${analytics.app.installer}&cd=installation" ${analytics.base.url}
-
 # Start the appserver + watcher + fpm
 systemctl start appserver.service
 systemctl start appserver-watcher.service
