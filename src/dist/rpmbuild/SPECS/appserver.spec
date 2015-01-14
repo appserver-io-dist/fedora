@@ -26,6 +26,7 @@ Provides:   appserver-dist
 %files
 /opt/appserver/*
 /lib/systemd/system/*
+/usr/sbin/*
 
 %post
 
