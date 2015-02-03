@@ -26,6 +26,7 @@ Provides:   appserver-dist
 %files
 /opt/appserver/*
 /lib/systemd/system/*
+/usr/sbin/*
 
 %post
 
@@ -36,6 +37,7 @@ ldconfig
 chown -R nobody:nobody /opt/appserver/var
 chown -R nobody:nobody /opt/appserver/webapps
 chown -R nobody:nobody /opt/appserver/deploy
+chmod 755 /usr/sbin/appserverctl
 
 # Make the link to our system systemd file
 ln -sf /lib/systemd/system/appserver.service /etc/systemd/system/appserver.service
