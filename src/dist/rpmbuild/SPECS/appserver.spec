@@ -33,10 +33,10 @@ Provides:   appserver-dist
 # Reload shared library list
 ldconfig
 
+# Setup appserver by calling server.php with -s install to trigger install mode setup
+/opt/appserver/server.php -s install
+
 # Set needed files as accessable for the configured user
-chown -R nobody:nobody /opt/appserver/var
-chown -R nobody:nobody /opt/appserver/webapps
-chown -R nobody:nobody /opt/appserver/deploy
 chmod 755 /usr/sbin/appserverctl
 
 # Make the link to our system systemd file
