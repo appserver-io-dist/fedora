@@ -122,7 +122,7 @@
         <chmod perm="755" dir="${target.dir}/src/opt/appserver/bin" includes="appserver*"/>
         <!-- create the .rpm file -->
         <exec dir="${target.dir}" executable="rpmbuild" failonerror="true">
-            <arg line="--buildroot ${target.dir}/src -bb ${target.dir}/src/rpmbuild/SPECS/appserver.spec"/>
+            <arg line="--buildroot ${target.dir}/src -bb ${target.dir}/src/rpmbuild/SPECS/appserver-dist.spec"/>
         </exec>
     </target>
 
@@ -154,7 +154,7 @@
 
         <!-- create the .rpm file -->
         <exec dir="${target.dir}" executable="rpmbuild" failonerror="true">
-            <arg line="--buildroot ${target.dir} -bb ${target.dir}/runtime/rpmbuild/SPECS/appserver.spec"/>
+            <arg line="--buildroot ${target.dir} -bb ${target.dir}/runtime/rpmbuild/SPECS/appserver-runtime.spec"/>
         </exec>
     </target>
 
@@ -231,7 +231,7 @@
         if (param.indexOf("-") !== -1) {
 
            resultVersion = param.substring(0, param.indexOf("-"));
-           resultBuildNumber = param.replace(resultVersion + "-", "");
+           resultBuildNumber = param.replace(resultVersion + "-", ".");
         }
 
         // store the result in new properties
