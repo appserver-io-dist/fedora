@@ -4,7 +4,7 @@
 %define        __os_install_post %{_dbpath}/brp-compress
 
 Name:       ${build.name.prefix}runtime
-Version:    ${appserver.runtime.semver}
+Version:    ${appserver.runtime.version}
 Release:    ${appserver.runtime.build}%{?dist}
 Summary:    appserver.io provides a multithreaded application server for PHP.
 Group:      System Environment/Base
