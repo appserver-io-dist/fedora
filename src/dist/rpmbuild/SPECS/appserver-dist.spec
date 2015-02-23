@@ -78,10 +78,6 @@ then
   # Perform tasks to do after the upgrade
 
   # Conditionally restart the appserver + watcher + fpm
-  if pgrep -f "appserver -D FOREGROUND$" > /dev/null 2>&1
-  then
-      systemctl restart appserver.service
-  fi
   if pgrep  -f "appserver-watcher -D FOREGROUND$" > /dev/null 2>&1
   then
       systemctl restart appserver-watcher.service
@@ -89,6 +85,10 @@ then
   if pgrep -f "php-fpm.+master.+appserver" > /dev/null 2>&1
   then
       systemctl restart appserver-php5-fpm.service
+  fi
+  if pgrep -f "appserver -D FOREGROUND$" > /dev/null 2>&1
+  then
+      systemctl restart appserver.service
   fi
 fi
 
