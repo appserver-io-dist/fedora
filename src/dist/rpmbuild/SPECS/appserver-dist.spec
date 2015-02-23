@@ -47,9 +47,6 @@ then
   # Create composer symlink
   ln -sf /opt/appserver/bin/composer.phar /opt/appserver/bin/composer
 
-  # Reload the systemd daemon
-  systemctl daemon-reload
-
   # Start the appserver + watcher + fpm
   systemctl start appserver.service
   systemctl start appserver-watcher.service
@@ -58,6 +55,9 @@ fi
 
 # Reload shared library list
 ldconfig
+
+# Reload the systemd daemon
+  systemctl daemon-reload
 
 
 %preun
