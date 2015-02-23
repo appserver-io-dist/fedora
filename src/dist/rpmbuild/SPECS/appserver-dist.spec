@@ -80,6 +80,7 @@ then
   # Conditionally restart the appserver + watcher + fpm
   if pgrep -f "appserver.-D.FOREGROUND$" > /dev/null 2>&1
   then
+    ps aux | grep appserver
       systemctl restart appserver.service
   fi
   if pgrep  -f "appserver-watcher -D FOREGROUND$" > /dev/null 2>&1
