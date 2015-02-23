@@ -3,7 +3,7 @@
 Description=appserver
 
 [Service]
-ExecStart=/opt/appserver/bin/php -dappserver.php_sapi=appserver server.php
+ExecStart=/opt/appserver/bin/appserver -D FOREGROUND
 
 [Install]
 WantedBy=multi-user.target

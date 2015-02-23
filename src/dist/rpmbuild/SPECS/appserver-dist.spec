@@ -80,15 +80,15 @@ then
   # Conditionally restart the appserver + watcher + fpm
   if pgrep -f "appserver -D FOREGROUND$" > /dev/null 2>&1
   then
-      /etc/init.d/appserver restart
+      systemctl restart appserver.service
   fi
   if pgrep  -f "appserver-watcher -D FOREGROUND$" > /dev/null 2>&1
   then
-      /etc/init.d/appserver-watcher restart
+      systemctl restart appserver-watcher.service
   fi
   if pgrep -f "php-fpm.+master.+appserver" > /dev/null 2>&1
   then
-      /etc/init.d/appserver-php5-fpm restart
+      systemctl restart appserver-php5-fpm.service
   fi
 fi
 
