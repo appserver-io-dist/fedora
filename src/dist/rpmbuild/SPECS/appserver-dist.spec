@@ -29,38 +29,76 @@ Provides:   appserver-dist
 /usr/sbin/*
 
 %post
+if [ "$1" = "1" ]; then
+  # Perform tasks after the initial installation
+
+  # Setup appserver by calling server.php with -s install to trigger install mode setup
+  /opt/appserver/server.php -s install
+
+  # Set needed files as accessable for the configured user
+  chmod 755 /usr/sbin/appserverctl
+
+  # Make the link to our system systemd file
+  ln -sf /lib/systemd/system/appserver.service /etc/systemd/system/appserver.service
+  ln -sf /lib/systemd/system/appserver-watcher.service /etc/systemd/system/appserver-watcher.service
+  ln -sf /lib/systemd/system/appserver-php5-fpm.service /etc/systemd/system/appserver-php5-fpm.service
+
+  # Create composer symlink
+  ln -sf /opt/appserver/bin/composer.phar /opt/appserver/bin/composer
+
+  # Reload the systemd daemon
+  systemctl daemon-reload
+
+  # Start the appserver + watcher + fpm
+  systemctl start appserver.service
+  systemctl start appserver-watcher.service
+  systemctl start appserver-php5-fpm.service
+
+elif [ "$1" = "2" ]; then
+  # Perform whatever maintenance must occur before the upgrade begins
+
+fi
 
 # Reload shared library list
 ldconfig
 
-# Setup appserver by calling server.php with -s install to trigger install mode setup
-/opt/appserver/server.php -s install
-
-# Set needed files as accessable for the configured user
-chmod 755 /usr/sbin/appserverctl
-
-# Make the link to our system systemd file
-ln -sf /lib/systemd/system/appserver.service /etc/systemd/system/appserver.service
-ln -sf /lib/systemd/system/appserver-watcher.service /etc/systemd/system/appserver-watcher.service
-ln -sf /lib/systemd/system/appserver-php5-fpm.service /etc/systemd/system/appserver-php5-fpm.service
-
-# Create composer symlink
-ln -sf /opt/appserver/bin/composer.phar /opt/appserver/bin/composer
-
-# Reload the systemd daemon
-systemctl daemon-reload
-
-# Start the appserver + watcher + fpm
-systemctl start appserver.service
-systemctl start appserver-watcher.service
-systemctl start appserver-php5-fpm.service
 
 %preun
-# Stop the appserver + watcher + fpm
-systemctl stop appserver.service
-systemctl stop appserver-watcher.service
-systemctl stop appserver-php5-fpm.service
+if [ "$1" = "1" ]; then
+  # Perform tasks to prepare for the upgrade
+
+elif [ "$1" = "0" ]; then
+  # Perform tasks before un-installation
+
+  # Stop the appserver + watcher + fpm
+  systemctl stop appserver.service
+  systemctl stop appserver-watcher.service
+  systemctl stop appserver-php5-fpm.service
+fi
+
 
 %postun
+if [ "$1" = "1" ]; then
+  # Perform tasks to do after the upgrade
+
+  # Conditionally restart the appserver + watcher + fpm
+  if pgrep -f "appserver -D FOREGROUND$" > /dev/null 2>&1
+  then
+      /etc/init.d/appserver restart
+  fi
+  if pgrep  -f "appserver-watcher -D FOREGROUND$" > /dev/null 2>&1
+  then
+      /etc/init.d/appserver-watcher restart
+  fi
+  if pgrep -f "php-fpm.+master.+appserver" > /dev/null 2>&1
+  then
+      /etc/init.d/appserver-php5-fpm restart
+  fi
+
+elif [ "$1" = "0" ]; then
+  # Perform tasks after un-installation
+
+fi
+
 # Reload shared library list
 ldconfig
