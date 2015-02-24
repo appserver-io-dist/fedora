@@ -25,12 +25,12 @@ Provides:   appserver-runtime
 
 %files
 /opt/appserver/bin/*
-/opt/appserver/etc/*
 /opt/appserver/include/*
 /opt/appserver/lib/*
 /opt/appserver/php/*
 /opt/appserver/sbin/*
 /opt/appserver/var/*
+%config(noreplace) /opt/appserver/etc/*
 
 %post
 # Reload shared library list
