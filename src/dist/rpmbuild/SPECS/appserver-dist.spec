@@ -77,9 +77,6 @@ if [ "$1" = "1" ]
 then
   # Perform tasks to do after the upgrade
 
-  # sleep here to avoid timing issues
-  sleep 3;
-
   # Conditionally restart the appserver + watcher + fpm
   systemctl status appserver > /dev/null 2>&1;
   if [ $? -eq 0 ]
