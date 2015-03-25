@@ -2,10 +2,6 @@
 <!DOCTYPE project>
 <project name="appserver-io-dist/fedora-tests-integration" basedir=".." default="run-integration-tests">
 
-    <!-- Read in tests property files -->
-    <property file="${basedir}/tests/tests.properties"/>
-    <property file="${basedir}/tests/tests.default.properties"/>
-
     <!-- ==================================================================== -->
     <!-- Runs all available integration tests                                 -->
     <!-- ==================================================================== -->
@@ -209,49 +205,6 @@
         <!-- test if a php_errors.log file has been created -->
         <available file="/opt/appserver/var/log/php_errors.log" property="php_errors.present"/>
         <fail if="php_errors.present" message="php_errors.log file has been created."/>
-    </target>
-
-    <!-- ==================================================================== -->
-    <!-- Will start a vagrant box dor testing purposes                        -->
-    <!-- ==================================================================== -->
-    <target name="start-vagrant-box" depends="prepare-vagrant-environment">
-        <!-- issue the actual command -->
-        <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
-            <arg value="up ${vagrant-box.name}" />
-        </exec>
-    </target>
-
-    <!-- ==================================================================== -->
-    <!-- Will destroy any running vagrant box                                 -->
-    <!-- ==================================================================== -->
-    <target name="destroy-vagrant-box">
-        <!-- issue the actual command -->
-        <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
-            <arg line="destroy -f" />
-        </exec>
-    </target>
-
-    <!-- ==================================================================== -->
-    <!-- Will prepare the environment to run a vagrant box in                 -->
-    <!-- ==================================================================== -->
-    <target name="prepare-vagrant-environment" depends="prepare">
-        <!-- expand the properties within our box configuration -->
-        <copy todir="${temp.dir}/tests" failonerror="true">
-            <fileset dir="${tests.dir}">
-                <include name="*/**"/>
-            </fileset>
-            <filterchain>
-                <expandproperties/>
-            </filterchain>
-        </copy>
-        <copy todir="${temp.dir}" failonerror="true">
-            <fileset dir="${basedir}">
-                <include name="build.*"/>
-            </fileset>
-        </copy>
-        <!-- move vagrant specific files down the tree where they are needed for starting the box -->
-        <move file="${temp.dir}/tests/Vagrantfile" tofile="${temp.dir}/Vagrantfile" />
-        <move file="${temp.dir}/tests/provision.sh" tofile="${temp.dir}/provision.sh" />
     </target>
 
 </project>

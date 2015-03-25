@@ -24,7 +24,7 @@
     <!-- ==================================================================== -->
     <!-- Import the tests/*.xml files                                           -->
     <!-- ==================================================================== -->
-    <import file="tests/integration.xml"/>
+    <import file="tests/test.xml"/>
 
     <!-- ==================================================================== -->
     <!-- Cleans the target directories                                        -->
@@ -234,16 +234,6 @@
         <!-- move the files -->
         <move file="${package.specific.dir}/${appserver.runtime.package}.rpm" todir="${build.dir}" failonerror="true"/>
         <move file="${package.specific.dir}/${build.name.prefix}dist-${appserver.src.semver}-${build.number}${appserver.src.suffix}.${os.version}.${os.architecture}.rpm" todir="${build.dir}" failonerror="true"/>
-    </target>
-
-    <!-- ==================================================================== -->
-    <!-- Copies any built package to the test machine.                        -->
-    <!-- ==================================================================== -->
-    <target name="copy-to-test-environment" description="Copies any built package to the test machine.">
-        <echo message="Now trying to upload ${package.name} to snapshot server"/>
-        <exec executable="scp" failonerror="true">
-            <arg line="-o StrictHostKeyChecking=no -i ${user.home}/.ssh/id_rsa ${build.dir}/${package.name} ${hub.scp-user}@${hub.address}:${hub.snapshot-path}"/>
-        </exec>
     </target>
 
     <!-- ==================================================================== -->
