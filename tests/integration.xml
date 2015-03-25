@@ -110,11 +110,11 @@
     </target>
 
     <!-- ==================================================================== -->
-    <!-- Tests if the additional "configtest" command works correctly         -->
+    <!-- Tests if the additional "setup" command works correctly         -->
     <!-- ==================================================================== -->
-    <target name="test-configtest-command">
-        <exec dir="${basedir}" executable="appserverctl" failonerror="true">
-            <arg line="configtest" />
+    <target name="test-setup-command">
+        <exec dir="/opt/appserver/bin" executable="php" failonerror="true">
+            <arg line="/opt/appserver/server.php -s dev" />
         </exec>
     </target>
 
