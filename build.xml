@@ -239,7 +239,7 @@
     <!-- ==================================================================== -->
     <!-- Copies any built package to the snapshot hosting server.             -->
     <!-- ==================================================================== -->
-    <target name="upload-builds" depends="move-build-files" description="Uploads any built package to the file-server.">
+    <target name="upload-builds" description="Uploads any built package to the file-server.">
         <echo message="Now try to upload all builds to file-server"/>
         <exec executable="sh" failonerror="true">
             <arg value="-c" />
@@ -251,8 +251,8 @@
     <!-- Creates all RPM packages and uploads them to builds file-server      -->
     <!-- ==================================================================== -->
     <target name="build" depends="prepare-build, create-appserver-dist-rpm, create-appserver-runtime-rpm">
-        <!-- run all tests -->
-        <antcall target="run-tests" />
+        <!-- move the files we just prepared to the build dir -->
+        <antcall target="move-build-files" />
     </target>
 
     <!-- ==================================================================== -->
