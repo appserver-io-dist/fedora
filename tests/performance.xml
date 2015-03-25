@@ -3,8 +3,8 @@
 <project name="appserver-io-dist/fedora-tests-performance" basedir=".." default="run-performance-tests">
 
     <!-- Read in tests property files -->
-    <property file="${basedir}/tests.properties"/>
-    <property file="${basedir}/tests.default.properties"/>
+    <property file="${basedir}/tests/tests.properties"/>
+    <property file="${basedir}/tests/tests.default.properties"/>
 
     <!-- ==================================================================== -->
     <!-- Runs all available performance tests                                 -->
