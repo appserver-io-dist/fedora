@@ -217,7 +217,7 @@
     <target name="start-vagrant-box" depends="prepare-vagrant-environment">
         <!-- issue the actual command -->
         <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
-            <arg value="up" />
+            <arg value="up ${vagrant-box.name}" />
         </exec>
     </target>
 
