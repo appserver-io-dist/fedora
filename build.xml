@@ -10,7 +10,7 @@
         <format property="time.stamp" pattern="yyyy.MM.dd.HHmmss"/>
     </tstamp>
 
-    <!-- Readin build property files -->
+    <!-- Read in build property files -->
     <property file="${basedir}/build.properties"/>
     <property file="${basedir}/build.default.properties"/>
 
@@ -19,6 +19,12 @@
     <property name="target.dir" value="${basedir}/target" />
     <property name="build.dir" value="${basedir}/build" />
     <property name="temp.dir" value="${basedir}/tmp" />
+    <property name="tests.dir" value="${basedir}/tests" />
+
+    <!-- ==================================================================== -->
+    <!-- Import the tests/*.xml files                                           -->
+    <!-- ==================================================================== -->
+    <import file="tests/integration.xml"/>
 
     <!-- ==================================================================== -->
     <!-- Cleans the target directories                                        -->
@@ -231,6 +237,16 @@
     </target>
 
     <!-- ==================================================================== -->
+    <!-- Copies any built package to the test machine.                        -->
+    <!-- ==================================================================== -->
+    <target name="copy-to-test-environment" description="Copies any built package to the test machine.">
+        <echo message="Now trying to upload ${package.name} to snapshot server"/>
+        <exec executable="scp" failonerror="true">
+            <arg line="-o StrictHostKeyChecking=no -i ${user.home}/.ssh/id_rsa ${build.dir}/${package.name} ${hub.scp-user}@${hub.address}:${hub.snapshot-path}"/>
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
     <!-- Copies any built package to the snapshot hosting server.             -->
     <!-- ==================================================================== -->
     <target name="upload-builds" depends="move-build-files" description="Uploads any built package to the file-server.">
@@ -245,7 +261,16 @@
     <!-- Creates all RPM packages and uploads them to builds file-server      -->
     <!-- ==================================================================== -->
     <target name="build" depends="prepare-build, create-appserver-dist-rpm, create-appserver-runtime-rpm">
-        <!-- yet nothing special to do -->
+        <!-- run all tests -->
+        <antcall target="run-tests" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Runs all available tests from all included test files                -->
+    <!-- ==================================================================== -->
+    <target name="run-tests" depends="prepare">
+        <!-- run all integration tests -->
+        <antcall target="run-integration-tests" />
     </target>
 
 </project>

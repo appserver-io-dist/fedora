@@ -1,0 +1,257 @@
+<?xml version="1.0"?>
+<!DOCTYPE project>
+<project name="appserver-io-dist/fedora-tests-integration" basedir=".." default="run-integration-tests">
+
+    <!-- Read in tests property files -->
+    <property file="${basedir}/tests.properties"/>
+    <property file="${basedir}/tests.default.properties"/>
+
+    <!-- ==================================================================== -->
+    <!-- Runs all available integration tests                                 -->
+    <!-- ==================================================================== -->
+    <target name="run-integration-tests">
+        <!-- test runtime installation -->
+        <antcall target="test-install-runtime" />
+        <!-- test dist installation -->
+        <antcall target="test-install-dist" />
+        <!-- test if the services are running -->
+        <antcall target="test-services-running" />
+        <!-- test if there have been errors during startup -->
+        <antcall target="test-errors-log-exists" />
+        <!-- test if the services are reachable -->
+        <antcall target="test-services-reachable" />
+        <!-- test if we can stop the services -->
+        <antcall target="test-services-stop" />
+        <!-- test if we can start the services -->
+        <antcall target="test-services-start" />
+        <!-- test if bundled apps were deployed correctly -->
+        <antcall target="test-bundled-apps-deployed" />
+        <!-- test if the "configtest" command works -->
+        <antcall target="test-configtest-command" />
+        <!-- test if the setup script works correctly -->
+        <antcall target="test-setup-script" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the runtime package can be installed correctly              -->
+    <!-- ==================================================================== -->
+    <target name="test-install-runtime">
+        <!-- try to install the appserver runtime -->
+        <exec dir="${basedir}" executable="yum" failonerror="true">
+            <arg line="-y install ${vagrant-build.dir}/${appserver.runtime.package}.rpm" />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the dist package can be installed correctly                 -->
+    <!-- ==================================================================== -->
+    <target name="test-install-dist">
+        <!-- try to install the appserver dist package -->
+        <exec dir="${basedir}" executable="yum" failonerror="true">
+            <arg line="-y install ${vagrant-build.dir}/${build.name.prefix}dist-*-${build.number}${appserver.src.suffix}.${os.version}.${os.architecture}.rpm" />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the bundled services are currently running                  -->
+    <!-- ==================================================================== -->
+    <target name="test-services-running">
+        <!-- test if the appserver service is running -->
+        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+            <arg line="status appserver" />
+        </exec>
+        <!-- test if the appserver watcher service is running -->
+        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+            <arg line="status appserver-watcher" />
+        </exec>
+        <!-- test if the appserver php-fpm service is running -->
+        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+            <arg line="status appserver-php5-fpm" />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the bundled services are currently in a stopped state       -->
+    <!-- ==================================================================== -->
+    <target name="test-services-stopped">
+        <!-- test if the appserver service is inactive -->
+        <exec dir="${basedir}" executable="test" failonerror="true">
+            <arg line='"`systemctl is-active appserver`" != "active"' />
+        </exec>
+        <!-- test if the appserver-watcher service is inactive -->
+        <exec dir="${basedir}" executable="test" failonerror="true">
+            <arg line='"`systemctl is-active appserver-watcher`" != "active"' />
+        </exec>
+        <!-- test if the appserver-php5-fpm service is inactive -->
+        <exec dir="${basedir}" executable="test" failonerror="true">
+            <arg line='"`systemctl is-active appserver-php5-fpm`" != "active"' />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the bundled apps have been deployed correctly               -->
+    <!-- ==================================================================== -->
+    <target name="test-bundled-apps-deployed">
+        <!-- test if the example app exists in the webapps directory -->
+        <available file="/opt/appserver/webapps/example/WEB-INF/web.xml" property="example_app.present"/>
+        <fail unless="example_app.present" message="Example app seem to not have been deployed correctly."/>
+        <!-- also test for the deploy flags -->
+        <available file="/opt/appserver/deploy/example.phar.deployed" property="example_deploy_flag.present"/>
+        <fail unless="example_deploy_flag.present" message="Example app deployed but incorrect deploy flag."/>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the additional "configtest" command works correctly         -->
+    <!-- ==================================================================== -->
+    <target name="test-configtest-command">
+        <exec dir="${basedir}" executable="appserverctl" failonerror="true">
+            <arg line="configtest" />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the additional "configtest" command works correctly         -->
+    <!-- ==================================================================== -->
+    <target name="test-configtest-command">
+        <exec dir="${basedir}" executable="appserverctl" failonerror="true">
+            <arg line="configtest" />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the bundled services can be started correctly               -->
+    <!-- ==================================================================== -->
+    <target name="test-services-start">
+        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+            <arg line="start appserver" />
+        </exec>
+        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+            <arg line="start appserver-watcher" />
+        </exec>
+        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+            <arg line="start appserver-php5-fpm" />
+        </exec>
+
+        <echo message="Starting seem to have gone well, test service states now" />
+
+        <!-- tests if the services are running -->
+        <antcall target="test-services-running" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the bundled services can be restarted correctly             -->
+    <!-- ==================================================================== -->
+    <target name="test-services-restart">
+        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+            <arg line="restart appserver" />
+        </exec>
+        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+            <arg line="restart appserver-watcher" />
+        </exec>
+        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+            <arg line="restart appserver-php5-fpm" />
+        </exec>
+
+        <echo message="Restart seem to have gone well, test service states now" />
+
+        <!-- tests if the services are running -->
+        <antcall target="test-services-running" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the bundled services can be stopped correctly               -->
+    <!-- ==================================================================== -->
+    <target name="test-services-stop">
+        <echo message="Attempting to stop all services" />
+        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+            <arg line="stop appserver" />
+        </exec>
+        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+            <arg line="stop appserver-watcher" />
+        </exec>
+        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+            <arg line="stop appserver-php5-fpm" />
+        </exec>
+
+        <echo message="Stopping seem to have gone well, test service states now" />
+
+        <!-- tests if the services are running -->
+        <antcall target="test-services-stopped" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the services can be reached over network                    -->
+    <!-- ==================================================================== -->
+    <target name="test-services-reachable">
+        <echo message="Trying to connect to the HTTP server." />
+        <condition property="service.http.reachable">
+            <socket server="127.0.0.1" port="9080"/>
+        </condition>
+        <fail unless="service.http.reachable" message="The HTTP server could not be reached."/>
+
+        <echo message="Trying to connect to the HTTPS server." />
+        <condition property="service.https.reachable">
+            <socket server="127.0.0.1" port="9443"/>
+        </condition>
+        <fail unless="service.https.reachable" message="The HTTPS server could not be reached."/>
+
+        <echo message="Trying to connect to the PHP-FPM service." />
+        <condition property="service.php-fpm.reachable">
+            <socket server="127.0.0.1" port="9010"/>
+        </condition>
+        <fail unless="service.php-fpm.reachable" message="The PHP-FPM service could not be reached."/>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the PHP errors log has been created (it should not)         -->
+    <!-- ==================================================================== -->
+    <target name="test-errors-log-exists">
+        <!-- test if a php_errors.log file has been created -->
+        <available file="/opt/appserver/var/log/php_errors.log" property="php_errors.present"/>
+        <fail if="php_errors.present" message="php_errors.log file has been created."/>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will start a vagrant box dor testing purposes                        -->
+    <!-- ==================================================================== -->
+    <target name="start-vagrant-box" depends="prepare-vagrant-environment">
+        <!-- issue the actual command -->
+        <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
+            <arg value="up" />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will destroy any running vagrant box                                 -->
+    <!-- ==================================================================== -->
+    <target name="destroy-vagrant-box">
+        <!-- issue the actual command -->
+        <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
+            <arg line="destroy -f" />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will prepare the environment to run a vagrant box in                 -->
+    <!-- ==================================================================== -->
+    <target name="prepare-vagrant-environment" depends="prepare">
+        <!-- expand the properties within our box configuration -->
+        <copy todir="${temp.dir}/tests" failonerror="true">
+            <fileset dir="${tests.dir}">
+                <include name="*/**"/>
+            </fileset>
+            <filterchain>
+                <expandproperties/>
+            </filterchain>
+        </copy>
+        <copy todir="${temp.dir}" failonerror="true">
+            <fileset dir="${basedir}">
+                <include name="build.*"/>
+            </fileset>
+        </copy>
+        <!-- move vagrant specific files down the tree where they are needed for starting the box -->
+        <move file="${temp.dir}/tests/Vagrantfile" tofile="${temp.dir}/Vagrantfile" />
+        <move file="${temp.dir}/tests/provision.sh" tofile="${temp.dir}/provision.sh" />
+    </target>
+
+</project>
