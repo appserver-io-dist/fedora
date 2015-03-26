@@ -41,10 +41,10 @@
     <!-- ==================================================================== -->
     <!-- Tests if the dist package can be installed correctly                 -->
     <!-- ==================================================================== -->
-    <target name="test-install-dist">
+    <target name="test-install-dist" depends="prepare-src-version-parts">
         <!-- try to install the appserver dist package -->
         <exec dir="${vagrant.basedir}" executable="yum" failonerror="true">
-            <arg line="-y install ${vagrant-build.dir}/${build.name.prefix}dist-*-${build.number}${appserver.src.suffix}.${os.version}.${os.architecture}.rpm" />
+            <arg line="-y install ${vagrant-build.dir}/${build.name.prefix}dist-${appserver.src.semver}-${build.number}${appserver.src.suffix}.${test-os.version}.${os.architecture}.rpm" />
         </exec>
     </target>
 
