@@ -54,7 +54,7 @@
         <move file="${temp.dir}/tests/Vagrantfile" tofile="${temp.dir}/Vagrantfile" />
         <move file="${temp.dir}/tests/provision.sh" tofile="${temp.dir}/provision.sh" />
         <!-- prepare a tmp dir for work within the VM -->
-        <mkdir dir="${vagrant-temp.dir}" />
+        <mkdir dir="${temp.dir}/tmp" />
     </target>
 
 </project>
