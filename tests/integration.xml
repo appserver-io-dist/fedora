@@ -33,7 +33,7 @@
     <!-- ==================================================================== -->
     <target name="test-install-runtime">
         <!-- try to install the appserver runtime -->
-        <exec dir="${basedir}" executable="yum" failonerror="true">
+        <exec dir="${vagrant.basedir}" executable="yum" failonerror="true">
             <arg line="-y install ${vagrant-build.dir}/${appserver.runtime.package}.rpm" />
         </exec>
     </target>
@@ -43,7 +43,7 @@
     <!-- ==================================================================== -->
     <target name="test-install-dist">
         <!-- try to install the appserver dist package -->
-        <exec dir="${basedir}" executable="yum" failonerror="true">
+        <exec dir="${vagrant.basedir}" executable="yum" failonerror="true">
             <arg line="-y install ${vagrant-build.dir}/${build.name.prefix}dist-*-${build.number}${appserver.src.suffix}.${os.version}.${os.architecture}.rpm" />
         </exec>
     </target>
@@ -53,15 +53,15 @@
     <!-- ==================================================================== -->
     <target name="test-services-running">
         <!-- test if the appserver service is running -->
-        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
             <arg line="status appserver" />
         </exec>
         <!-- test if the appserver watcher service is running -->
-        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
             <arg line="status appserver-watcher" />
         </exec>
         <!-- test if the appserver php-fpm service is running -->
-        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
             <arg line="status appserver-php5-fpm" />
         </exec>
     </target>
@@ -71,15 +71,15 @@
     <!-- ==================================================================== -->
     <target name="test-services-stopped">
         <!-- test if the appserver service is inactive -->
-        <exec dir="${basedir}" executable="test" failonerror="true">
+        <exec dir="${vagrant.basedir}" executable="test" failonerror="true">
             <arg line='"`systemctl is-active appserver`" != "active"' />
         </exec>
         <!-- test if the appserver-watcher service is inactive -->
-        <exec dir="${basedir}" executable="test" failonerror="true">
+        <exec dir="${vagrant.basedir}" executable="test" failonerror="true">
             <arg line='"`systemctl is-active appserver-watcher`" != "active"' />
         </exec>
         <!-- test if the appserver-php5-fpm service is inactive -->
-        <exec dir="${basedir}" executable="test" failonerror="true">
+        <exec dir="${vagrant.basedir}" executable="test" failonerror="true">
             <arg line='"`systemctl is-active appserver-php5-fpm`" != "active"' />
         </exec>
     </target>
@@ -100,7 +100,7 @@
     <!-- Tests if the additional "configtest" command works correctly         -->
     <!-- ==================================================================== -->
     <target name="test-configtest-command">
-        <exec dir="${basedir}" executable="appserverctl" failonerror="true">
+        <exec dir="${vagrant.basedir}" executable="appserverctl" failonerror="true">
             <arg line="configtest" />
         </exec>
     </target>
@@ -118,13 +118,13 @@
     <!-- Tests if the bundled services can be started correctly               -->
     <!-- ==================================================================== -->
     <target name="test-services-start">
-        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
             <arg line="start appserver" />
         </exec>
-        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
             <arg line="start appserver-watcher" />
         </exec>
-        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
             <arg line="start appserver-php5-fpm" />
         </exec>
 
@@ -138,13 +138,13 @@
     <!-- Tests if the bundled services can be restarted correctly             -->
     <!-- ==================================================================== -->
     <target name="test-services-restart">
-        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
             <arg line="restart appserver" />
         </exec>
-        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
             <arg line="restart appserver-watcher" />
         </exec>
-        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
             <arg line="restart appserver-php5-fpm" />
         </exec>
 
@@ -159,13 +159,13 @@
     <!-- ==================================================================== -->
     <target name="test-services-stop">
         <echo message="Attempting to stop all services" />
-        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
             <arg line="stop appserver" />
         </exec>
-        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
             <arg line="stop appserver-watcher" />
         </exec>
-        <exec dir="${basedir}" executable="systemctl" failonerror="true">
+        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
             <arg line="stop appserver-php5-fpm" />
         </exec>
 
