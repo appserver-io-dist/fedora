@@ -34,7 +34,7 @@
     <target name="test-install-runtime">
         <!-- try to install the appserver runtime -->
         <exec dir="${vagrant.basedir}" executable="yum" failonerror="true">
-            <arg line="-y install ${vagrant-build.dir}/${appserver.runtime.package}.rpm" />
+            <arg line="-y install ${vagrant-build.dir}/${build.name.prefix}runtime-${appserver.runtime.version}-${appserver.runtime.build}.${test-os.version}.${os.architecture}.rpm" />
         </exec>
     </target>
 
