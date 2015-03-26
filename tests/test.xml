@@ -40,6 +40,8 @@
             <fileset dir="${basedir}">
                 <include name="build.*"/>
                 <include name="tests/*"/>
+                <exclude name="tests/Vagrantfile"/>
+                <exclude name="tests/provision.sh"/>
             </fileset>
         </copy>
         <!-- expand the properties within our box configuration -->
