@@ -53,6 +53,8 @@
         <!-- move vagrant specific files down the tree where they are needed for starting the box -->
         <move file="${temp.dir}/tests/Vagrantfile" tofile="${temp.dir}/Vagrantfile" />
         <move file="${temp.dir}/tests/provision.sh" tofile="${temp.dir}/provision.sh" />
+        <!-- prepare a tmp dir for work within the VM -->
+        <mkdir dir="${vagrant-temp.dir}" />
     </target>
 
 </project>
