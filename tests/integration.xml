@@ -33,8 +33,9 @@
     <!-- ==================================================================== -->
     <target name="test-install-runtime">
         <!-- try to install the appserver runtime -->
-        <exec dir="${test.basedir}" executable="yum" failonerror="true">
-            <arg line="-y install ${vagrant-build.dir}/${build.name.prefix}runtime-${appserver.runtime.version}-${appserver.runtime.build}.${test-os.version}.${os.architecture}.rpm" />
+        <exec dir="${test.basedir}" executable="bash" failonerror="true">
+            <arg value="-c" />
+            <arg value="yum -y install ${vagrant-build.dir}/${build.name.prefix}runtime-${appserver.runtime.version}-${appserver.runtime.build}.${test-os.version}.${os.architecture}.rpm" />
         </exec>
     </target>
 
@@ -43,8 +44,9 @@
     <!-- ==================================================================== -->
     <target name="test-install-dist" depends="prepare-src-version-parts">
         <!-- try to install the appserver dist package -->
-        <exec dir="${test.basedir}" executable="yum" failonerror="true">
-            <arg line="-y install ${vagrant-build.dir}/${build.name.prefix}dist-${appserver.src.semver}-*${appserver.src.suffix}.${test-os.version}.${os.architecture}.rpm" />
+        <exec dir="${test.basedir}" executable="bash" failonerror="true">
+            <arg value="-c" />
+            <arg line="yum -y install ${vagrant-build.dir}/${build.name.prefix}dist-${appserver.src.semver}-*${appserver.src.suffix}.${test-os.version}.${os.architecture}.rpm" />
         </exec>
     </target>
 
