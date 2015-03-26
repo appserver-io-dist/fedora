@@ -24,8 +24,6 @@
         <antcall target="test-bundled-apps-deployed" />
         <!-- test if the "configtest" command works -->
         <antcall target="test-configtest-command" />
-        <!-- test if the setup script works correctly -->
-        <antcall target="test-setup-script" />
     </target>
 
     <!-- ==================================================================== -->
@@ -191,22 +189,22 @@
     <!-- ==================================================================== -->
     <target name="test-services-reachable">
         <echo message="Trying to connect to the HTTP server." />
-        <condition property="service.http.reachable">
+        <waitfor maxwait="20" maxwaitunit="second" timeoutproperty="service.http.unreachable">
             <socket server="127.0.0.1" port="9080"/>
-        </condition>
-        <fail unless="service.http.reachable" message="The HTTP server could not be reached."/>
+        </waitfor>
+        <fail if="service.http.unreachable" message="The HTTP server could not be reached."/>
 
         <echo message="Trying to connect to the HTTPS server." />
-        <condition property="service.https.reachable">
+        <waitfor maxwait="20" maxwaitunit="second" timeoutproperty="service.https.unreachable">
             <socket server="127.0.0.1" port="9443"/>
-        </condition>
-        <fail unless="service.https.reachable" message="The HTTPS server could not be reached."/>
+        </waitfor>
+        <fail if="service.https.unreachable" message="The HTTPS server could not be reached."/>
 
         <echo message="Trying to connect to the PHP-FPM service." />
-        <condition property="service.php-fpm.reachable">
+        <waitfor maxwait="20" maxwaitunit="second" timeoutproperty="service.php-fpm.unreachable">
             <socket server="127.0.0.1" port="9010"/>
-        </condition>
-        <fail unless="service.php-fpm.reachable" message="The PHP-FPM service could not be reached."/>
+        </waitfor>
+        <fail if="service.php-fpm.unreachable" message="The PHP-FPM service could not be reached."/>
     </target>
 
     <!-- ==================================================================== -->
