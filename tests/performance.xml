@@ -5,7 +5,25 @@
     <!-- ==================================================================== -->
     <!-- Runs all available performance tests                                 -->
     <!-- ==================================================================== -->
-    <target name="run-performance-tests">
+    <target name="run-performance-tests" depends="ensure-runtime-installed, ensure-dist-installed">
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Runs all available integration tests within an expected vagrant VM   -->
+    <!-- ==================================================================== -->
+    <target name="run-vagrant-performance-tests">
+        <!-- map the vagrant name according to our prepared environment -->
+        <property name="vagrant-box.name" value="${vagrant-box.prefix}Test" />
+        <!-- prepare the testing environment -->
+        <antcall target="prepare-test-environment" />
+        <!-- start our vagrant box -->
+        <antcall target="start-vagrant-box" />
+        <!-- invoke original integration tests within vagrant box -->
+        <exec dir="${temp.dir}" executable="vagrant">
+            <arg line="ssh -c 'sudo ant run-performance-tests -buildfile ${vagrant.basedir}/build.xml'" />
+        </exec>
+        <!-- destroy the box after all work is done -->
+        <antcall target="destroy-vagrant-box" />
     </target>
 
 </project>

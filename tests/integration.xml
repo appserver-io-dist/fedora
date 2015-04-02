@@ -24,8 +24,26 @@
         <antcall target="test-bundled-apps-deployed" />
         <!-- test if the "configtest" command works -->
         <antcall target="test-configtest-command" />
-        <!-- test if the setup script works correctly -->
-        <antcall target="test-setup-script" />
+        <!-- test if the bundled binaries and executables are present and usable -->
+        <antcall target="test-executable-exist" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Runs all available integration tests within an expected vagrant VM   -->
+    <!-- ==================================================================== -->
+    <target name="run-vagrant-integration-tests">
+        <!-- map the vagrant name according to our prepared environment -->
+        <property name="vagrant-box.name" value="${vagrant-box.prefix}Test" />
+        <!-- prepare the test environment -->
+        <antcall target="prepare-test-environment" />
+        <!-- start our vagrant box -->
+        <antcall target="start-vagrant-box" />
+        <!-- invoke original integration tests within vagrant box -->
+        <exec dir="${temp.dir}" executable="vagrant">
+            <arg line="ssh -c 'sudo ant run-integration-tests -buildfile ${vagrant.basedir}/build.xml'" />
+        </exec>
+        <!-- destroy the box after all work is done -->
+        <antcall target="destroy-vagrant-box" />
     </target>
 
     <!-- ==================================================================== -->
@@ -33,9 +51,7 @@
     <!-- ==================================================================== -->
     <target name="test-install-runtime">
         <!-- try to install the appserver runtime -->
-        <exec dir="${vagrant.basedir}" executable="yum" failonerror="true">
-            <arg line="-y install ${vagrant-build.dir}/${appserver.runtime.package}.rpm" />
-        </exec>
+        <antcall target="install-appserver-runtime" />
     </target>
 
     <!-- ==================================================================== -->
@@ -43,9 +59,7 @@
     <!-- ==================================================================== -->
     <target name="test-install-dist">
         <!-- try to install the appserver dist package -->
-        <exec dir="${vagrant.basedir}" executable="yum" failonerror="true">
-            <arg line="-y install ${vagrant-build.dir}/${build.name.prefix}dist-*-${build.number}${appserver.src.suffix}.${os.version}.${os.architecture}.rpm" />
-        </exec>
+        <antcall target="install-appserver-dist" />
     </target>
 
     <!-- ==================================================================== -->
@@ -205,6 +219,48 @@
         <!-- test if a php_errors.log file has been created -->
         <available file="/opt/appserver/var/log/php_errors.log" property="php_errors.present"/>
         <fail if="php_errors.present" message="php_errors.log file has been created."/>
+    </target>
+    
+    <!-- ==================================================================== -->
+    <!-- Tests if the packaged executables exist                             -->
+    <!-- ==================================================================== -->
+    <target name="test-executable-exist">
+        <!-- test if a composer binary and ecexutable is present -->
+        <echo message="Test if a composer binary and ecexutable are present and executable." />
+        <available file="${appserver-base.dir}/bin/composer.phar" property="composer-binary.present"/>
+        <fail unless="composer-binary.present" message="The composer binary could not be found."/>
+        <available file="${appserver-base.dir}/bin/composer" property="composer-exec.present"/>
+        <fail unless="composer-exec.present" message="The composer executable could not be found."/>
+        <exec executable="${appserver-base.dir}/bin/composer" failonerror="true">
+            <arg value="-V"/>
+        </exec>
+        <!-- test if a PHP binary and ecexutable is present -->
+        <echo message="Test if a PHP binary is present and executable." />
+        <available file="${appserver-base.dir}/bin/php" property="php-binary.present"/>
+        <fail unless="php-binary.present" message="The PHP binary could not be found."/>
+        <exec executable="${appserver-base.dir}/bin/php" failonerror="true">
+            <arg value="--version"/>
+        </exec>
+        <!-- test if a PHAR binary and ecexutable is present -->
+        <echo message="Test if a PHAR binary and ecexutable are present and executable." />
+        <available file="${appserver-base.dir}/bin/phar.phar" property="phar-binary.present"/>
+        <fail unless="phar-binary.present" message="The PHAR binary could not be found."/>
+        <available file="${appserver-base.dir}/bin/phar" property="phar-exec.present"/>
+        <fail unless="phar-exec.present" message="The PHAR executable could not be found."/>
+        <exec executable="${appserver-base.dir}/bin/phar" failonerror="true">
+            <arg value="version"/>
+        </exec>
+    </target>
+    
+    <!-- ==================================================================== -->
+    <!-- Tests if the jmeter testplan configured against the example app      -->
+    <!-- does run without any errors                                          -->
+    <!-- ==================================================================== -->
+    <target name="test-jmeter-example-testplan">
+        <!-- test if the testplan runs through -->
+        <exec executable="${jmeter.vagrant.dir}/bin/jmeter" failonerror="true">
+            <arg line="-n -t ${jmeter.example-test.path}"/>
+        </exec>
     </target>
 
 </project>

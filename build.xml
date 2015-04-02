@@ -22,7 +22,7 @@
     <property name="tests.dir" value="${basedir}/tests" />
 
     <!-- ==================================================================== -->
-    <!-- Import the tests/*.xml files                                           -->
+    <!-- Import the tests/*.xml files                                         -->
     <!-- ==================================================================== -->
     <import file="tests/test.xml"/>
 
@@ -38,7 +38,9 @@
     <!-- Cleans the build directories                                         -->
     <!-- ==================================================================== -->
     <target name="clean-build">
-        <delete dir="${build.dir}" includeemptydirs="true" quiet="false" verbose="false" failonerror="true"/>
+        <delete includeemptydirs="true" quiet="false" verbose="false" failonerror="true">
+            <fileset dir="${build.dir}" includes="**/*"/>
+        </delete>
     </target>
 
     <!-- ==================================================================== -->
@@ -63,6 +65,36 @@
         <get src="https://getcomposer.org/installer" dest="${temp.dir}/composer-installer" />
         <exec dir="${temp.dir}" executable="php">
             <arg value="composer-installer" />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will test if the targeted box is already started                     -->
+    <!-- ==================================================================== -->
+    <target name="test-vagrant-box-started">
+        <!-- issue the actual command -->
+        <exec dir="${temp.dir}" executable="vagrant" errorproperty="vagrant.box.not-started">
+            <arg line="ssh ${vagrant-box.name}" />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will start a vagrant box within the tmp directory                    -->
+    <!-- ==================================================================== -->
+    <target name="start-vagrant-box" depends="test-vagrant-box-started" if="vagrant.box.not-started">
+        <!-- issue the actual start command -->
+        <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
+            <arg line="up ${vagrant-box.name} --provider=${vagrant.provider}" />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will destroy any running vagrant box within our tmp directory        -->
+    <!-- ==================================================================== -->
+    <target name="destroy-vagrant-box">
+        <!-- issue the actual destroy command -->
+        <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
+            <arg line="destroy -f" />
         </exec>
     </target>
 
@@ -237,6 +269,26 @@
     </target>
 
     <!-- ==================================================================== -->
+    <!-- Propagates the recent build to the official release sites, updates   -->
+    <!-- release lists, etc.. Not to be mistaken for the "release" target     -->
+    <!-- ==================================================================== -->
+    <target name="release" description="Propagates the recent build to the official release sites, updates release lists, etc..">
+        <echo message="Now starting release cycle"/>
+        <!-- upload the build artifacts to the snapshot hub -->
+        <antcall target="upload-builds" />
+    </target>
+    
+    <!-- ==================================================================== -->
+    <!-- Publishes the recent build to any snapshot hubs, etc.. Not to be     -->
+    <!-- mistaken for the "release" target                                    -->
+    <!-- ==================================================================== -->
+    <target name="publish" description="Publishes the recent build to any snapshot hubs, etc..">
+        <echo message="Now starting publish cycle"/>
+        <!-- upload the build artifacts to the snapshot hub -->
+        <antcall target="upload-builds" />
+    </target>
+    
+    <!-- ==================================================================== -->
     <!-- Copies any built package to the snapshot hosting server.             -->
     <!-- ==================================================================== -->
     <target name="upload-builds" description="Uploads any built package to the file-server.">
@@ -248,6 +300,32 @@
     </target>
 
     <!-- ==================================================================== -->
+    <!-- Will prepare the environment to run a vagrant box in                 -->
+    <!-- ==================================================================== -->
+    <target name="prepare-build-environment" depends="prepare, prepare-build">
+
+    	<copy todir="${temp.dir}" failonerror="true">
+    	   	<fileset dir="${basedir}">
+               <include name="build.*"/>
+   	           <include name="tests/*"/>
+               <exclude name="tests/provision.sh"/>
+            </fileset>
+        </copy>
+        <!-- expand the properties within our box configuration -->
+        <copy todir="${temp.dir}" failonerror="true">
+            <fileset dir=".">
+                <include name="Vagrantfile"/>
+                <include name="provision.sh"/>
+            </fileset>
+            <filterchain>
+                <expandproperties/>
+            </filterchain>
+        </copy>
+        <!-- prepare a tmp dir for work within the VM -->
+        <mkdir dir="${temp.dir}/tmp" />
+    </target>
+
+    <!-- ==================================================================== -->
     <!-- Creates all RPM packages and uploads them to builds file-server      -->
     <!-- ==================================================================== -->
     <target name="build" depends="prepare-build, create-appserver-dist-rpm, create-appserver-runtime-rpm">
@@ -256,11 +334,45 @@
     </target>
 
     <!-- ==================================================================== -->
+    <!-- Creates all RPM packages and uploads them to builds file-server      -->
+    <!-- ==================================================================== -->
+    <target name="vagrant-build" depends="prepare">
+
+        <!-- map the vagrant name according to our prepared environment -->
+        <property name="vagrant-box.name" value="${vagrant-box.prefix}Build" />
+        <!-- prepare the building environment -->
+        <antcall target="prepare-build-environment" />
+        <!-- start our vagrant box -->
+        <antcall target="start-vagrant-box" />
+        <!-- invoke original integration tests within vagrant box -->
+        <exec dir="${temp.dir}" executable="vagrant">
+            <arg line="ssh -c 'sudo ant build -buildfile ${vagrant.basedir}/build.xml'" />
+        </exec>
+        <!-- destroy the box after all work is done -->
+        <!-- antcall target="destroy-vagrant-box" / -->
+    </target>
+
+    <!-- ==================================================================== -->
     <!-- Runs all available tests from all included test files                -->
     <!-- ==================================================================== -->
     <target name="run-tests" depends="prepare">
-        <!-- run all integration tests -->
-        <antcall target="run-integration-tests" />
+
+        <!-- map the vagrant name according to our prepared environment -->
+        <property name="vagrant-box.name" value="${vagrant-box.prefix}Test" />
+        <!-- prepare the testing environment -->
+        <antcall target="prepare-test-environment" />
+        <!-- start our vagrant box -->
+        <antcall target="start-vagrant-box" />
+        <!-- invoke original integration tests within vagrant box -->
+        <exec dir="${temp.dir}" executable="vagrant">
+            <arg line="ssh -c 'sudo ant run-integration-tests -buildfile ${vagrant.basedir}/build.xml'" />
+        </exec>
+        <!-- invoke original integration tests within vagrant box -->
+        <exec dir="${temp.dir}" executable="vagrant">
+            <arg line="ssh -c 'sudo ant run-performance-tests -buildfile ${vagrant.basedir}/build.xml'" />
+        </exec>
+        <!-- destroy the box after all work is done -->
+        <antcall target="destroy-vagrant-box" />
     </target>
 
 </project>
