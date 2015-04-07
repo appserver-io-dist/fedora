@@ -18,7 +18,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Share the build folder as read only
   config.vm.synced_folder "${build.dir}", "${vagrant-build.dir}"
-  config.vm.synced_folder "${test.dir}", "${vagrant-test.dir}"
+  config.vm.synced_folder "${reports.dir}", "${vagrant-reports.dir}"
 
   # Extend the timeout for initial connection
   config.vm.boot_timeout = 1200
