@@ -59,7 +59,7 @@
     <!-- ==================================================================== -->
     <!-- Tests if the dist package can be installed correctly                 -->
     <!-- ==================================================================== -->
-    <target name="test-install-dist">
+    <target name="test-install-dist" depends="prepare-src-version-parts">
         <!-- try to install the appserver dist package -->
         <antcall target="install-appserver-dist" />
     </target>
@@ -69,15 +69,18 @@
     <!-- ==================================================================== -->
     <target name="test-services-running">
         <!-- test if the appserver service is running -->
-        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
+        <echo message="Test if service 'appserver' is running." />
+        <exec dir="${test.basedir}" executable="systemctl" failonerror="true">
             <arg line="status appserver" />
         </exec>
         <!-- test if the appserver watcher service is running -->
-        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
+        <echo message="Test if service 'appserver-watcher' is running." />
+        <exec dir="${test.basedir}" executable="systemctl" failonerror="true">
             <arg line="status appserver-watcher" />
         </exec>
         <!-- test if the appserver php-fpm service is running -->
-        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
+        <echo message="Test if service 'appserver-php5-fpm' is running." />
+        <exec dir="${test.basedir}" executable="systemctl" failonerror="true">
             <arg line="status appserver-php5-fpm" />
         </exec>
     </target>
@@ -87,16 +90,22 @@
     <!-- ==================================================================== -->
     <target name="test-services-stopped">
         <!-- test if the appserver service is inactive -->
-        <exec dir="${vagrant.basedir}" executable="test" failonerror="true">
-            <arg line='"`systemctl is-active appserver`" != "active"' />
+        <echo message="Test if service 'appserver' is in a stopped state." />
+        <exec dir="${test.basedir}" executable="bash" failonerror="true">
+            <arg value="-c" />
+            <arg value='$(test "`systemctl is-active appserver`" != "active")' />
         </exec>
         <!-- test if the appserver-watcher service is inactive -->
-        <exec dir="${vagrant.basedir}" executable="test" failonerror="true">
-            <arg line='"`systemctl is-active appserver-watcher`" != "active"' />
+        <echo message="Test if service 'appserver-watcher' is in a stopped state." />
+        <exec dir="${test.basedir}" executable="bash" failonerror="true">
+            <arg value="-c" />
+            <arg value='$(test "`systemctl is-active appserver-watcher`" != "active")' />
         </exec>
         <!-- test if the appserver-php5-fpm service is inactive -->
-        <exec dir="${vagrant.basedir}" executable="test" failonerror="true">
-            <arg line='"`systemctl is-active appserver-php5-fpm`" != "active"' />
+        <echo message="Test if service 'appserver-php5-fpm' is in a stopped state." />
+        <exec dir="${test.basedir}" executable="bash" failonerror="true">
+            <arg value="-c" />
+            <arg value='$(test "`systemctl is-active appserver-php5-fpm`" != "active")' />
         </exec>
     </target>
 
@@ -105,10 +114,11 @@
     <!-- ==================================================================== -->
     <target name="test-bundled-apps-deployed">
         <!-- test if the example app exists in the webapps directory -->
-        <available file="/opt/appserver/webapps/example/WEB-INF/web.xml" property="example_app.present"/>
+        <echo message="Test if app 'example' has been deployed and flagged correctly." />
+        <available file="${appserver-base.dir}/webapps/example/WEB-INF/web.xml" property="example_app.present"/>
         <fail unless="example_app.present" message="Example app seem to not have been deployed correctly."/>
         <!-- also test for the deploy flags -->
-        <available file="/opt/appserver/deploy/example.phar.deployed" property="example_deploy_flag.present"/>
+        <available file="${appserver-base.dir}/deploy/example.phar.deployed" property="example_deploy_flag.present"/>
         <fail unless="example_deploy_flag.present" message="Example app deployed but incorrect deploy flag."/>
     </target>
 
@@ -116,17 +126,8 @@
     <!-- Tests if the additional "configtest" command works correctly         -->
     <!-- ==================================================================== -->
     <target name="test-configtest-command">
-        <exec dir="${vagrant.basedir}" executable="appserverctl" failonerror="true">
+        <exec dir="${test.basedir}" executable="appserverctl" failonerror="true">
             <arg line="configtest" />
-        </exec>
-    </target>
-
-    <!-- ==================================================================== -->
-    <!-- Tests if the additional "setup" command works correctly         -->
-    <!-- ==================================================================== -->
-    <target name="test-setup-command">
-        <exec dir="/opt/appserver/bin" executable="php" failonerror="true">
-            <arg line="/opt/appserver/server.php -s dev" />
         </exec>
     </target>
 
@@ -134,13 +135,16 @@
     <!-- Tests if the bundled services can be started correctly               -->
     <!-- ==================================================================== -->
     <target name="test-services-start">
-        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
+        <echo message="Test starting service 'appserver'." />
+        <exec dir="${test.basedir}" executable="systemctl" failonerror="true">
             <arg line="start appserver" />
         </exec>
-        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
+        <echo message="Test starting service 'appserver-watcher'." />
+        <exec dir="${test.basedir}" executable="systemctl" failonerror="true">
             <arg line="start appserver-watcher" />
         </exec>
-        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
+        <echo message="Test starting service 'appserver-php5-fpm'." />
+        <exec dir="${test.basedir}" executable="systemctl" failonerror="true">
             <arg line="start appserver-php5-fpm" />
         </exec>
 
@@ -154,13 +158,16 @@
     <!-- Tests if the bundled services can be restarted correctly             -->
     <!-- ==================================================================== -->
     <target name="test-services-restart">
-        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
+        <echo message="Test restarting service 'appserver'." />
+        <exec dir="${test.basedir}" executable="systemctl" failonerror="true">
             <arg line="restart appserver" />
         </exec>
-        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
+        <echo message="Test restarting service 'appserver-watcher'." />
+        <exec dir="${test.basedir}" executable="systemctl" failonerror="true">
             <arg line="restart appserver-watcher" />
         </exec>
-        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
+        <echo message="Test restarting service 'appserver-php5-fpm'." />
+        <exec dir="${test.basedir}" executable="systemctl" failonerror="true">
             <arg line="restart appserver-php5-fpm" />
         </exec>
 
@@ -174,14 +181,16 @@
     <!-- Tests if the bundled services can be stopped correctly               -->
     <!-- ==================================================================== -->
     <target name="test-services-stop">
-        <echo message="Attempting to stop all services" />
-        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
+        <echo message="Test stopping service 'appserver'." />
+        <exec dir="${test.basedir}" executable="systemctl" failonerror="true">
             <arg line="stop appserver" />
         </exec>
-        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
+        <echo message="Test stopping service 'appserver-watcher'." />
+        <exec dir="${test.basedir}" executable="systemctl" failonerror="true">
             <arg line="stop appserver-watcher" />
         </exec>
-        <exec dir="${vagrant.basedir}" executable="systemctl" failonerror="true">
+        <echo message="Test stopping service 'appserver-php5-fpm'." />
+        <exec dir="${test.basedir}" executable="systemctl" failonerror="true">
             <arg line="stop appserver-php5-fpm" />
         </exec>
 
@@ -196,22 +205,22 @@
     <!-- ==================================================================== -->
     <target name="test-services-reachable">
         <echo message="Trying to connect to the HTTP server." />
-        <condition property="service.http.reachable">
+        <waitfor maxwait="20" maxwaitunit="second" timeoutproperty="service.http.unreachable">
             <socket server="127.0.0.1" port="9080"/>
-        </condition>
-        <fail unless="service.http.reachable" message="The HTTP server could not be reached."/>
+        </waitfor>
+        <fail if="service.http.unreachable" message="The HTTP server could not be reached."/>
 
         <echo message="Trying to connect to the HTTPS server." />
-        <condition property="service.https.reachable">
+        <waitfor maxwait="20" maxwaitunit="second" timeoutproperty="service.https.unreachable">
             <socket server="127.0.0.1" port="9443"/>
-        </condition>
-        <fail unless="service.https.reachable" message="The HTTPS server could not be reached."/>
+        </waitfor>
+        <fail if="service.https.unreachable" message="The HTTPS server could not be reached."/>
 
         <echo message="Trying to connect to the PHP-FPM service." />
-        <condition property="service.php-fpm.reachable">
+        <waitfor maxwait="20" maxwaitunit="second" timeoutproperty="service.php-fpm.unreachable">
             <socket server="127.0.0.1" port="9010"/>
-        </condition>
-        <fail unless="service.php-fpm.reachable" message="The PHP-FPM service could not be reached."/>
+        </waitfor>
+        <fail if="service.php-fpm.unreachable" message="The PHP-FPM service could not be reached."/>
     </target>
 
     <!-- ==================================================================== -->
@@ -219,7 +228,8 @@
     <!-- ==================================================================== -->
     <target name="test-errors-log-exists">
         <!-- test if a php_errors.log file has been created -->
-        <available file="/opt/appserver/var/log/php_errors.log" property="php_errors.present"/>
+        <echo message="Test for existence of 'php_errors.log' log file." />
+        <available file="${appserver-base.dir}/var/log/php_errors.log" property="php_errors.present"/>
         <fail if="php_errors.present" message="php_errors.log file has been created."/>
     </target>
     
