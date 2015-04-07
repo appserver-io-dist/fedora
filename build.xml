@@ -318,7 +318,7 @@
     <!-- ==================================================================== -->
     <!-- Will prepare the environment to run a vagrant box in                 -->
     <!-- ==================================================================== -->
-    <target name="prepare-build-environment" depends="prepare, prepare-build, prepare-reports">
+    <target name="prepare-build-environment" depends="prepare, clean-build, clean-reports">
         <copy todir="${temp.dir}" failonerror="true">
             <fileset dir="${basedir}">
                <include name="build.*"/>
@@ -363,7 +363,7 @@
             <arg line="ssh -c 'sudo ant build -buildfile ${vagrant.basedir}/build.xml'" />
         </exec>
         <!-- destroy the box after all work is done -->
-        <!-- antcall target="destroy-vagrant-box" / -->
+        <antcall target="destroy-vagrant-box" />
     </target>
 
         <!-- ==================================================================== -->

@@ -26,6 +26,8 @@
         <antcall target="test-configtest-command" />
         <!-- test if the bundled binaries and executables are present and usable -->
         <antcall target="test-executable-exist" />
+        <!-- test if the jmeter testplan runs through without errors -->
+        <antcall target="test-jmeter-example-testplan" />
     </target>
 
     <!-- ==================================================================== -->
@@ -259,7 +261,7 @@
     <target name="test-jmeter-example-testplan">
         <!-- test if the testplan runs through -->
         <exec executable="${jmeter.vagrant.dir}/bin/jmeter" failonerror="true">
-            <arg line="-n -t ${jmeter.example-test.path}"/>
+            <arg line="-n -t ${jmeter.example-test.path}/example-testplan.jmx -l ${vagrant-reports.dir}/integration-example-testplan.jtl -Jon_error=stoptestnow"/>
         </exec>
     </target>
 
