@@ -19,7 +19,7 @@
     <property name="target.dir" value="${basedir}/target" />
     <property name="build.dir" value="${basedir}/build" />
     <property name="temp.dir" value="${basedir}/tmp" />
-    <property name="tests.dir" value="${basedir}/tests" />
+    <property name="reports.dir" value="${basedir}/reports" />
 
     <!-- ==================================================================== -->
     <!-- Import the tests/*.xml files                                         -->
@@ -44,11 +44,27 @@
     </target>
 
     <!-- ==================================================================== -->
+    <!-- Cleans the reports directories                                         -->
+    <!-- ==================================================================== -->
+    <target name="clean-reports">
+        <delete includeemptydirs="true" quiet="false" verbose="false" failonerror="true">
+            <fileset dir="${reports.dir}" includes="**/*"/>
+        </delete>
+    </target>
+
+    <!-- ==================================================================== -->
     <!-- Prepares the target dir                                              -->
     <!-- ==================================================================== -->
     <target name="prepare" depends="clean">
         <mkdir dir="${target.dir}" />
         <mkdir dir="${temp.dir}" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Prepares the reports environment                                       -->
+    <!-- ==================================================================== -->
+    <target name="prepare-reports" depends="clean-reports">
+        <mkdir dir="${reports.dir}" />
     </target>
 
     <!-- ==================================================================== -->
@@ -277,7 +293,7 @@
         <!-- upload the build artifacts to the snapshot hub -->
         <antcall target="upload-builds" />
     </target>
-    
+
     <!-- ==================================================================== -->
     <!-- Publishes the recent build to any snapshot hubs, etc.. Not to be     -->
     <!-- mistaken for the "release" target                                    -->
@@ -287,7 +303,7 @@
         <!-- upload the build artifacts to the snapshot hub -->
         <antcall target="upload-builds" />
     </target>
-    
+
     <!-- ==================================================================== -->
     <!-- Copies any built package to the snapshot hosting server.             -->
     <!-- ==================================================================== -->
@@ -302,12 +318,11 @@
     <!-- ==================================================================== -->
     <!-- Will prepare the environment to run a vagrant box in                 -->
     <!-- ==================================================================== -->
-    <target name="prepare-build-environment" depends="prepare, prepare-build">
-
-    	<copy todir="${temp.dir}" failonerror="true">
-    	   	<fileset dir="${basedir}">
+    <target name="prepare-build-environment" depends="prepare, prepare-build, prepare-reports">
+        <copy todir="${temp.dir}" failonerror="true">
+            <fileset dir="${basedir}">
                <include name="build.*"/>
-   	           <include name="tests/*"/>
+               <include name="tests/*"/>
                <exclude name="tests/provision.sh"/>
             </fileset>
         </copy>
@@ -337,7 +352,6 @@
     <!-- Creates all RPM packages and uploads them to builds file-server      -->
     <!-- ==================================================================== -->
     <target name="vagrant-build" depends="prepare">
-
         <!-- map the vagrant name according to our prepared environment -->
         <property name="vagrant-box.name" value="${vagrant-box.prefix}Build" />
         <!-- prepare the building environment -->
@@ -352,11 +366,21 @@
         <!-- antcall target="destroy-vagrant-box" / -->
     </target>
 
-    <!-- ==================================================================== -->
-    <!-- Runs all available tests from all included test files                -->
-    <!-- ==================================================================== -->
-    <target name="run-tests" depends="prepare">
+        <!-- ==================================================================== -->
+        <!-- Runs all available tests from all included test files                -->
+        <!-- ==================================================================== -->
+        <target name="run-tests" depends="prepare">
+            <!-- run the integration tests -->
+            <antcall target="run-integration-tests" />
+            <!-- run performance tests -->
+            <antcall target="run-performance-tests" />
+        </target>
 
+    <!-- ==================================================================== -->
+    <!-- Runs all available tests from all included test files within a       -->
+    <!-- vagrant machine                                                      -->
+    <!-- ==================================================================== -->
+    <target name="run-vagrant-tests" depends="prepare">
         <!-- map the vagrant name according to our prepared environment -->
         <property name="vagrant-box.name" value="${vagrant-box.prefix}Test" />
         <!-- prepare the testing environment -->
