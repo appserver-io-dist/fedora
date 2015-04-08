@@ -51,6 +51,18 @@
     </target>
 
     <!-- ==================================================================== -->
+    <!-- Will start a vagrant box specifically suited for test tasks          -->
+    <!-- ==================================================================== -->
+    <target name="start-vagrant-test-box">
+        <!-- map the vagrant name according to our prepared environment -->
+        <property name="vagrant-box.name" value="${vagrant-box.prefix}Test" />
+        <!-- prepare the testing environment -->
+        <antcall target="prepare-test-environment" />
+        <!-- start our vagrant box -->
+        <antcall target="start-vagrant-box" />
+    </target>
+
+    <!-- ==================================================================== -->
     <!-- Tests if the dist package has been installed                         -->
     <!-- ==================================================================== -->
     <target name="test-dist-installed">

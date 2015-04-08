@@ -105,6 +105,18 @@
     </target>
 
     <!-- ==================================================================== -->
+    <!-- Will start a vagrant box specifically suited for build tasks         -->
+    <!-- ==================================================================== -->
+    <target name="start-vagrant-build-box">
+        <!-- map the vagrant name according to our prepared environment -->
+        <property name="vagrant-box.name" value="${vagrant-box.prefix}Build" />
+        <!-- prepare the building environment -->
+        <antcall target="prepare-build-environment" />
+        <!-- start our vagrant box -->
+        <antcall target="start-vagrant-box" />
+    </target>
+
+    <!-- ==================================================================== -->
     <!-- Will destroy any running vagrant box within our tmp directory        -->
     <!-- ==================================================================== -->
     <target name="destroy-vagrant-box">
@@ -355,49 +367,41 @@
     <!-- ==================================================================== -->
     <!-- Creates all RPM packages and uploads them to builds file-server      -->
     <!-- ==================================================================== -->
-    <target name="vagrant-build" depends="prepare">
-        <!-- map the vagrant name according to our prepared environment -->
-        <property name="vagrant-box.name" value="${vagrant-box.prefix}Build" />
-        <!-- prepare the building environment -->
-        <antcall target="prepare-build-environment" />
+    <target name="vagrant-build">
         <!-- start our vagrant box -->
-        <antcall target="start-vagrant-box" />
-        <!-- invoke original integration tests within vagrant box -->
+        <antcall target="start-vagrant-build-box" />
+        <!-- invoke original build target within vagrant box -->
         <exec dir="${temp.dir}" executable="vagrant">
-            <arg line="ssh -c 'sudo ant build -buildfile ${vagrant.basedir}/build.xml'" />
+            <arg line="ssh -c 'sudo ant build -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token}'" />
         </exec>
         <!-- destroy the box after all work is done -->
         <antcall target="destroy-vagrant-box" />
     </target>
 
-        <!-- ==================================================================== -->
-        <!-- Runs all available tests from all included test files                -->
-        <!-- ==================================================================== -->
-        <target name="run-tests" depends="prepare">
-            <!-- run the integration tests -->
-            <antcall target="run-integration-tests" />
-            <!-- run performance tests -->
-            <antcall target="run-performance-tests" />
-        </target>
+    <!-- ==================================================================== -->
+    <!-- Runs all available tests from all included test files                -->
+    <!-- ==================================================================== -->
+    <target name="run-tests" depends="prepare">
+        <!-- run the integration tests -->
+        <antcall target="run-system-tests" />
+        <!-- run performance tests -->
+        <antcall target="run-performance-tests" />
+    </target>
 
     <!-- ==================================================================== -->
     <!-- Runs all available tests from all included test files within a       -->
     <!-- vagrant machine                                                      -->
     <!-- ==================================================================== -->
-    <target name="run-vagrant-tests" depends="prepare">
-        <!-- map the vagrant name according to our prepared environment -->
-        <property name="vagrant-box.name" value="${vagrant-box.prefix}Test" />
-        <!-- prepare the testing environment -->
-        <antcall target="prepare-test-environment" />
+    <target name="run-vagrant-tests">
         <!-- start our vagrant box -->
-        <antcall target="start-vagrant-box" />
+        <antcall target="start-vagrant-test-box" />
         <!-- invoke original integration tests within vagrant box -->
         <exec dir="${temp.dir}" executable="vagrant">
-            <arg line="ssh -c 'sudo ant run-system-tests -buildfile ${vagrant.basedir}/build.xml'" />
+            <arg line="ssh -c 'sudo ant run-system-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token}'" />
         </exec>
         <!-- invoke original integration tests within vagrant box -->
         <exec dir="${temp.dir}" executable="vagrant">
-            <arg line="ssh -c 'sudo ant run-performance-tests -buildfile ${vagrant.basedir}/build.xml'" />
+            <arg line="ssh -c 'sudo ant run-performance-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token}'" />
         </exec>
         <!-- destroy the box after all work is done -->
         <antcall target="destroy-vagrant-box" />
