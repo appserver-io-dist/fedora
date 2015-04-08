@@ -34,12 +34,8 @@
     <!-- Runs all available system tests within an expected vagrant VM   -->
     <!-- ==================================================================== -->
     <target name="run-vagrant-system-tests">
-        <!-- map the vagrant name according to our prepared environment -->
-        <property name="vagrant-box.name" value="${vagrant-box.prefix}Test" />
-        <!-- prepare the test environment -->
-        <antcall target="prepare-test-environment" />
         <!-- start our vagrant box -->
-        <antcall target="start-vagrant-box" />
+        <antcall target="start-vagrant-test-box" />
         <!-- invoke original system tests within vagrant box -->
         <exec dir="${temp.dir}" executable="vagrant">
             <arg line="ssh -c 'sudo ant run-system-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}'" />

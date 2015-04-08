@@ -297,7 +297,7 @@
     <target name="move-build-files" depends="prepare-src-version-parts">
         <!-- move the files -->
         <move file="${package.specific.dir}/${appserver.runtime.package}.rpm" todir="${build.dir}" failonerror="true"/>
-        <move file="${package.specific.dir}/${build.name.prefix}dist-${appserver.src.semver}-${build.number}${appserver.src.suffix}.${os.version}.${os.architecture}.rpm" todir="${build.dir}" failonerror="true"/>
+        <move file="${package.specific.dir}/${build.name.prefix}dist-${appserver.src.semver}-${build.number}${appserver.src.suffix}.${os.version.prefix}${target-os.version}.${os.architecture}.rpm" todir="${build.dir}" failonerror="true"/>
     </target>
 
     <!-- ==================================================================== -->
