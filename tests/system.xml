@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <!DOCTYPE project>
-<project name="appserver-io-dist/fedora-tests-integration" basedir=".." default="run-integration-tests">
+<project name="appserver-io-dist/fedora-tests-system" basedir=".." default="run-system-tests">
 
     <!-- ==================================================================== -->
-    <!-- Runs all available integration tests                                 -->
+    <!-- Runs all available system tests                                 -->
     <!-- ==================================================================== -->
-    <target name="run-integration-tests">
+    <target name="run-system-tests">
         <!-- test runtime installation -->
         <antcall target="test-install-runtime" />
         <!-- test dist installation -->
@@ -31,18 +31,18 @@
     </target>
 
     <!-- ==================================================================== -->
-    <!-- Runs all available integration tests within an expected vagrant VM   -->
+    <!-- Runs all available system tests within an expected vagrant VM   -->
     <!-- ==================================================================== -->
-    <target name="run-vagrant-integration-tests">
+    <target name="run-vagrant-system-tests">
         <!-- map the vagrant name according to our prepared environment -->
         <property name="vagrant-box.name" value="${vagrant-box.prefix}Test" />
         <!-- prepare the test environment -->
         <antcall target="prepare-test-environment" />
         <!-- start our vagrant box -->
         <antcall target="start-vagrant-box" />
-        <!-- invoke original integration tests within vagrant box -->
+        <!-- invoke original system tests within vagrant box -->
         <exec dir="${temp.dir}" executable="vagrant">
-            <arg line="ssh -c 'sudo ant run-integration-tests -buildfile ${vagrant.basedir}/build.xml'" />
+            <arg line="ssh -c 'sudo ant run-system-tests -buildfile ${vagrant.basedir}/build.xml'" />
         </exec>
         <!-- destroy the box after all work is done -->
         <antcall target="destroy-vagrant-box" />
@@ -271,7 +271,7 @@
     <target name="test-jmeter-example-testplan">
         <!-- test if the testplan runs through -->
         <exec executable="${jmeter.vagrant.dir}/bin/jmeter" failonerror="true">
-            <arg line="-n -t ${jmeter.example-test.path}/example-testplan.jmx -l ${vagrant-reports.dir}/integration-example-testplan.jtl -Jon_error=stoptestnow"/>
+            <arg line="-n -t ${jmeter.example-test.path}/example-testplan.jmx -l ${vagrant-reports.dir}/system-example-testplan.jtl -Jon_error=stoptestnow"/>
         </exec>
     </target>
 
