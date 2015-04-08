@@ -372,7 +372,7 @@
         <antcall target="start-vagrant-build-box" />
         <!-- invoke original build target within vagrant box -->
         <exec dir="${temp.dir}" executable="vagrant">
-            <arg line="ssh -c 'sudo ant build -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token}'" />
+            <arg line="ssh -c 'sudo ant build -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number}'" />
         </exec>
         <!-- destroy the box after all work is done -->
         <antcall target="destroy-vagrant-box" />
@@ -397,11 +397,11 @@
         <antcall target="start-vagrant-test-box" />
         <!-- invoke original integration tests within vagrant box -->
         <exec dir="${temp.dir}" executable="vagrant">
-            <arg line="ssh -c 'sudo ant run-system-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token}'" />
+            <arg line="ssh -c 'sudo ant run-system-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number}'" />
         </exec>
         <!-- invoke original integration tests within vagrant box -->
         <exec dir="${temp.dir}" executable="vagrant">
-            <arg line="ssh -c 'sudo ant run-performance-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token}'" />
+            <arg line="ssh -c 'sudo ant run-performance-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number}'" />
         </exec>
         <!-- destroy the box after all work is done -->
         <antcall target="destroy-vagrant-box" />

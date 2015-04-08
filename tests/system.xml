@@ -42,7 +42,7 @@
         <antcall target="start-vagrant-box" />
         <!-- invoke original system tests within vagrant box -->
         <exec dir="${temp.dir}" executable="vagrant">
-            <arg line="ssh -c 'sudo ant run-system-tests -buildfile ${vagrant.basedir}/build.xml'" />
+            <arg line="ssh -c 'sudo ant run-system-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number}'" />
         </exec>
         <!-- destroy the box after all work is done -->
         <antcall target="destroy-vagrant-box" />
