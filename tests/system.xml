@@ -266,7 +266,7 @@
     <!-- ==================================================================== -->
     <target name="test-jmeter-example-testplan">
         <!-- test if the testplan runs through -->
-        <exec executable="${jmeter.vagrant.dir}/bin/jmeter" failonerror="true">
+        <exec executable="${jmeter.vagrant.basedir}/${jmeter.package.name}/bin/jmeter" failonerror="true">
             <arg line="-n -t ${jmeter.example-test.path}/example-testplan.jmx -l ${vagrant-reports.dir}/system-example-testplan.jtl -Jon_error=stoptestnow"/>
         </exec>
     </target>
