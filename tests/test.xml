@@ -89,6 +89,14 @@
                 <expandproperties/>
             </filterchain>
         </copy>
+        <copy todir="${temp.dir}" failonerror="true">
+            <fileset dir="${basedir}">
+                <include name="Vagrantfile"/>
+            </fileset>
+            <filterchain>
+                <expandproperties/>
+            </filterchain>
+        </copy>
         <!-- prepare a tmp dir for work within the VM -->
         <mkdir dir="${temp.dir}/tmp" />
     </target>

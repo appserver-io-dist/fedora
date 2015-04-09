@@ -18,6 +18,7 @@
     <property name="src.dir" value="${basedir}/src" />
     <property name="target.dir" value="${basedir}/target" />
     <property name="build.dir" value="${basedir}/build" />
+    <property name="tests.dir" value="${basedir}/tests" />
     <property name="temp.dir" value="${basedir}/tmp" />
     <property name="reports.dir" value="${basedir}/reports" />
 
@@ -95,9 +96,27 @@
     </target>
 
     <!-- ==================================================================== -->
+    <!-- Will test if a readily packaged vagrant machine is available at the  -->
+    <!-- appropriate location. Only makes sense if the box name is known      -->
+    <!-- ==================================================================== -->
+    <target name="test-packaged-box-exists" if="vagrant-box.name">
+        <available file="${http://boxes.appserver.io/linux/fedora}/${vagrant-box.name}" property="vagrant.packaged-box.exists"/>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will initialize an already packaged vagrant box                      -->
+    <!-- ==================================================================== -->
+    <target name="initialize-packaged-box" depends="test-packaged-box-exists" if="vagrant.packaged-box.exists">
+        <!-- issue the actual start command -->
+        <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
+            <arg line="up ${vagrant-box.name} --provider=${vagrant.provider}" />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
     <!-- Will start a vagrant box within the tmp directory                    -->
     <!-- ==================================================================== -->
-    <target name="start-vagrant-box" depends="test-vagrant-box-started" if="vagrant.box.not-started">
+    <target name="start-vagrant-box" depends="test-vagrant-box-started, initialize-packaged-box" if="vagrant.box.not-started">
         <!-- issue the actual start command -->
         <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
             <arg line="up ${vagrant-box.name} --provider=${vagrant.provider}" />
