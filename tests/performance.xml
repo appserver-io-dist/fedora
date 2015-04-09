@@ -28,7 +28,7 @@
         <!-- start our vagrant box -->
         <antcall target="start-vagrant-test-box" />
         <!-- invoke original integration tests within vagrant box -->
-        <exec dir="${temp.dir}" executable="vagrant">
+        <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
             <arg line="ssh -c 'sudo ant run-performance-tests -buildfile ${vagrant.basedir}/build.xml'" />
         </exec>
         <!-- destroy the box after all work is done -->

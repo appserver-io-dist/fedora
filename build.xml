@@ -168,8 +168,8 @@
         <!-- install dependencies via composer and let postinstall-scripts proceed -->
         <echo message="Installing composer dependencies" />
         <exec dir="${target.dir}/src${appserver-base.dir}" executable="php">
-                    <arg line="${temp.dir}/composer.phar config github-oauth.github.com ${github.oauth.token}"/>
-                </exec>
+            <arg line="${temp.dir}/composer.phar config github-oauth.github.com ${github.oauth.token}"/>
+        </exec>
         <exec dir="${target.dir}/src${appserver-base.dir}" executable="php">
             <arg line="${temp.dir}/composer.phar install --prefer-dist --no-dev --no-interaction --ignore-platform-reqs --optimize-autoloader"/>
         </exec>
@@ -390,7 +390,7 @@
         <!-- start our vagrant box -->
         <antcall target="start-vagrant-build-box" />
         <!-- invoke original build target within vagrant box -->
-        <exec dir="${temp.dir}" executable="vagrant">
+        <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
             <arg line="ssh -c 'sudo ant build -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}'" />
         </exec>
         <!-- destroy the box after all work is done -->
@@ -415,11 +415,11 @@
         <!-- start our vagrant box -->
         <antcall target="start-vagrant-test-box" />
         <!-- invoke original integration tests within vagrant box -->
-        <exec dir="${temp.dir}" executable="vagrant">
+        <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
             <arg line="ssh -c 'sudo ant run-system-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}'" />
         </exec>
         <!-- invoke original integration tests within vagrant box -->
-        <exec dir="${temp.dir}" executable="vagrant">
+        <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
             <arg line="ssh -c 'sudo ant run-performance-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}'" />
         </exec>
         <!-- destroy the box after all work is done -->
