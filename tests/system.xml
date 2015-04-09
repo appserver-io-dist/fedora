@@ -37,11 +37,14 @@
         <!-- start our vagrant box -->
         <antcall target="start-vagrant-test-box" />
         <!-- invoke original system tests within vagrant box -->
-        <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
+        <exec dir="${temp.dir}" executable="vagrant" errorproperty="system-test.failed">
             <arg line="ssh -c 'sudo ant run-system-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}'" />
         </exec>
         <!-- destroy the box after all work is done -->
         <antcall target="destroy-vagrant-box" />
+        
+        <!-- tell them about any failures we might encountered -->
+        <fail if="system-test.failed" message="The system tests failed, see log above." />
     </target>
 
     <!-- ==================================================================== -->
