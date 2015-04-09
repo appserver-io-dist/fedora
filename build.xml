@@ -397,7 +397,7 @@
         <antcall target="destroy-vagrant-box" />
         
         <!-- tell them about any failures we might encountered -->
-        <fail if="build.failed" message="The build failed, see log above." />
+        <fail if="build.failed" message="The build failed with message '${build.failed}', see log above." />
     </target>
 
     <!-- ==================================================================== -->
@@ -429,8 +429,8 @@
         <antcall target="destroy-vagrant-box" />
         
         <!-- tell them about any failures we might encountered -->
-        <fail if="system-test.failed" message="The system tests failed, see log above." />
-        <fail if="performance-test.failed" message="The performance tests failed, see log above." />
+        <fail if="system-test.failed" message="The system tests failed with message '${system-test.failed}', see log above." />
+        <fail if="performance-test.failed" message="The performance tests failed with message '${performance-test.failed}', see log above." />
     </target>
 
 </project>

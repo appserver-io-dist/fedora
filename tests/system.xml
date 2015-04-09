@@ -44,7 +44,7 @@
         <antcall target="destroy-vagrant-box" />
         
         <!-- tell them about any failures we might encountered -->
-        <fail if="system-test.failed" message="The system tests failed, see log above." />
+        <fail if="system-test.failed" message="The system tests failed with message '${system-test.failed}', see log above." />
     </target>
 
     <!-- ==================================================================== -->
