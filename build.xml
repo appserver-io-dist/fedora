@@ -375,29 +375,39 @@
         <mkdir dir="${temp.dir}/tmp" />
     </target>
 
+    
+
     <!-- ==================================================================== -->
-    <!-- Creates all RPM packages and uploads them to builds file-server      -->
+    <!-- Creates all RPM packages within a temporarily started vagrant box.   -->
+    <!-- Box will be started and destroyed automatically                      -->
     <!-- ==================================================================== -->
-    <target name="build" depends="prepare-build, create-appserver-dist-rpm, create-appserver-runtime-rpm">
-        <!-- move the files we just prepared to the build dir -->
-        <antcall target="move-build-files" />
+    <target name="build">
+        <!-- start our vagrant box -->
+        <antcall target="start-vagrant-build-box" />
+        <!-- start the build in the box -->
+        <antcall target="vagrant-build" />
+        <!-- destroy the box after all work is done -->
+        <antcall target="destroy-vagrant-box" />
+        <!-- tell them about any failures we might encountered -->
+        <fail if="build.failed" message="The build failed with message '${build.failed}', see log above." />
     </target>
 
     <!-- ==================================================================== -->
-    <!-- Creates all RPM packages and uploads them to builds file-server      -->
+    <!-- Creates all RPM packages within an existing vagrant box              -->
     <!-- ==================================================================== -->
     <target name="vagrant-build">
-        <!-- start our vagrant box -->
-        <antcall target="start-vagrant-build-box" />
         <!-- invoke original build target within vagrant box -->
         <exec dir="${temp.dir}" executable="vagrant" errorproperty="build.failed">
             <arg line="ssh -c 'sudo ant build -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}'" />
         </exec>
-        <!-- destroy the box after all work is done -->
-        <antcall target="destroy-vagrant-box" />
-        
-        <!-- tell them about any failures we might encountered -->
-        <fail if="build.failed" message="The build failed with message '${build.failed}', see log above." />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Creates all RPM packages locally                                     -->
+    <!-- ==================================================================== -->
+    <target name="local-build" depends="prepare-build, create-appserver-dist-rpm, create-appserver-runtime-rpm">
+        <!-- move the files we just prepared to the build dir -->
+        <antcall target="move-build-files" />
     </target>
 
     <!-- ==================================================================== -->
