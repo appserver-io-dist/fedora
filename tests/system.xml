@@ -3,9 +3,9 @@
 <project name="appserver-io-dist/fedora-tests-system" basedir=".." default="run-system-tests">
 
     <!-- ==================================================================== -->
-    <!-- Runs all available system tests                                 -->
+    <!-- Runs all available system tests locally                              -->
     <!-- ==================================================================== -->
-    <target name="run-system-tests">
+    <target name="local-run-system-tests">
         <!-- test runtime installation -->
         <antcall target="test-install-runtime" />
         <!-- test dist installation -->
@@ -31,20 +31,28 @@
     </target>
 
     <!-- ==================================================================== -->
-    <!-- Runs all available system tests within an expected vagrant VM   -->
+    <!-- Runs all available system tests within a vagrant box we start and    -->
+    <!-- destroy automatically                                                -->
     <!-- ==================================================================== -->
-    <target name="run-vagrant-system-tests">
+    <target name="run-system-tests">
         <!-- start our vagrant box -->
         <antcall target="start-vagrant-test-box" />
         <!-- invoke original system tests within vagrant box -->
-        <exec dir="${temp.dir}" executable="vagrant" errorproperty="system-test.failed">
-            <arg line="ssh -c 'sudo ant run-system-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}'" />
-        </exec>
+        <antcall target="vagrant-run-system-tests" />
         <!-- destroy the box after all work is done -->
         <antcall target="destroy-vagrant-box" />
-        
         <!-- tell them about any failures we might encountered -->
         <fail if="system-test.failed" message="The system tests failed with message '${system-test.failed}', see log above." />
+    </target>
+    
+    <!-- ==================================================================== -->
+    <!-- Runs all available system tests within an expected vagrant box       -->
+    <!-- ==================================================================== -->
+    <target name="vagrant-run-system-tests">
+        <!-- invoke original system tests within vagrant box -->
+        <exec dir="${temp.dir}" executable="vagrant" errorproperty="system-test.failed">
+            <arg line="ssh -c 'sudo ant local-run-system-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}' -- -t -t" />
+        </exec>
     </target>
 
     <!-- ==================================================================== -->

@@ -5,9 +5,34 @@
     <!-- ==================================================================== -->
     <!-- Runs all available performance tests                                 -->
     <!-- ==================================================================== -->
-    <target name="run-performance-tests" depends="ensure-runtime-installed, ensure-dist-installed">
+    <target name="local-run-performance-tests" depends="ensure-runtime-installed, ensure-dist-installed">
         <!-- test if the jmeter testplan runs through without errors -->
         <antcall target="measure-jmeter-example-testplan" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Runs all available performance tests within a vagrant box we start   -->
+    <!-- and destroy automatically                                            -->
+    <!-- ==================================================================== -->
+    <target name="run-performance-tests">
+        <!-- start our vagrant box -->
+        <antcall target="start-vagrant-test-box" />
+        <!-- invoke original performance tests within vagrant box -->
+        <antcall target="vagrant-run-performance-tests" />
+        <!-- destroy the box after all work is done -->
+        <antcall target="destroy-vagrant-box" />
+        <!-- tell them about any failures we might encountered -->
+        <fail if="system-test.failed" message="The performance tests failed with message '${performance-test.failed}', see log above." />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Runs all available performance tests within an expected vagrant VM   -->
+    <!-- ==================================================================== -->
+    <target name="vagrant-run-performance-tests">
+        <!-- invoke original performance tests within vagrant box -->
+        <exec dir="${temp.dir}" executable="vagrant" errorproperty="performance-test.failed">
+            <arg line="ssh -c 'sudo ant local-run-performance-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}' -- -t -t" />
+        </exec>
     </target>
 
     <!-- ==================================================================== -->
@@ -19,23 +44,6 @@
         <exec executable="${jmeter.vagrant.basedir}/${jmeter.package.name}/bin/jmeter" failonerror="true">
             <arg line="-n -t ${jmeter.example-test.path}/example-testplan.jmx -l ${vagrant-reports.dir}/performance-example-testplan.jtl"/>
         </exec>
-    </target>
-
-    <!-- ==================================================================== -->
-    <!-- Runs all available integration tests within an expected vagrant VM   -->
-    <!-- ==================================================================== -->
-    <target name="run-vagrant-performance-tests">
-        <!-- start our vagrant box -->
-        <antcall target="start-vagrant-test-box" />
-        <!-- invoke original integration tests within vagrant box -->
-        <exec dir="${temp.dir}" executable="vagrant" errorproperty="performance-test.failed">
-            <arg line="ssh -c 'sudo ant run-performance-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}'" />
-        </exec>
-        <!-- destroy the box after all work is done -->
-        <antcall target="destroy-vagrant-box" />
-        
-        <!-- tell them about any failures we might encountered -->
-        <fail if="performance-test.failed" message="The performance tests failed with message '${performance-test.failed}', see log above." />
     </target>
 
 </project>

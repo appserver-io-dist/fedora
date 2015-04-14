@@ -119,7 +119,7 @@
     <target name="start-vagrant-box" depends="test-vagrant-box-started, initialize-packaged-box" if="vagrant.box.not-started">
         <!-- issue the actual start command -->
         <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
-            <arg line="up ${vagrant-box.name} --provider=${vagrant.provider}" />
+            <arg line="up ${vagrant-box.name} --provider=${vagrant.provider} --destroy-on-error" />
         </exec>
     </target>
 
@@ -321,12 +321,12 @@
 
     <!-- ==================================================================== -->
     <!-- Propagates the recent build to the official release sites, updates   -->
-    <!-- release lists, etc.. Not to be mistaken for the "release" target     -->
+    <!-- release lists, etc.. Not to be mistaken for the "publish" target     -->
     <!-- ==================================================================== -->
     <target name="release" description="Propagates the recent build to the official release sites, updates release lists, etc..">
         <echo message="Now starting release cycle"/>
-        <!-- upload the build artifacts to the snapshot hub -->
-        <antcall target="upload-builds" />
+        <!-- publish first -->
+        <antcall target="publish" />
     </target>
 
     <!-- ==================================================================== -->
@@ -336,13 +336,13 @@
     <target name="publish" description="Publishes the recent build to any snapshot hubs, etc..">
         <echo message="Now starting publish cycle"/>
         <!-- upload the build artifacts to the snapshot hub -->
-        <antcall target="upload-builds" />
+        <antcall target="copy-to-hub" />
     </target>
 
     <!-- ==================================================================== -->
     <!-- Copies any built package to the snapshot hosting server.             -->
     <!-- ==================================================================== -->
-    <target name="upload-builds" description="Uploads any built package to the file-server.">
+    <target name="copy-to-hub" description="Uploads any built package to the file-server.">
         <echo message="Now try to upload all builds to file-server"/>
         <exec executable="sh" failonerror="true">
             <arg value="-c" />
@@ -375,8 +375,6 @@
         <mkdir dir="${temp.dir}/tmp" />
     </target>
 
-    
-
     <!-- ==================================================================== -->
     <!-- Creates all RPM packages within a temporarily started vagrant box.   -->
     <!-- Box will be started and destroyed automatically                      -->
@@ -398,7 +396,7 @@
     <target name="vagrant-build">
         <!-- invoke original build target within vagrant box -->
         <exec dir="${temp.dir}" executable="vagrant" errorproperty="build.failed">
-            <arg line="ssh -c 'sudo ant build -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}'" />
+            <arg line="ssh -c 'sudo ant local-build -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}' -- -t -t" />
         </exec>
     </target>
 
@@ -413,28 +411,37 @@
     <!-- ==================================================================== -->
     <!-- Runs all available tests from all included test files                -->
     <!-- ==================================================================== -->
-    <target name="run-tests" depends="prepare">
+    <target name="local-run-tests" depends="prepare">
         <!-- run the integration tests -->
-        <antcall target="run-system-tests" />
+        <antcall target="local-run-system-tests" />
         <!-- run performance tests -->
-        <antcall target="run-performance-tests" />
+        <antcall target="local-run-performance-tests" />
     </target>
 
     <!-- ==================================================================== -->
     <!-- Runs all available tests from all included test files within a       -->
     <!-- vagrant machine                                                      -->
     <!-- ==================================================================== -->
-    <target name="run-vagrant-tests">
-        <!-- start our vagrant box -->
-        <antcall target="start-vagrant-test-box" />
+    <target name="vagrant-run-tests">
         <!-- invoke original integration tests within vagrant box -->
         <exec dir="${temp.dir}" executable="vagrant" errorproperty="system-test.failed">
-            <arg line="ssh -c 'sudo ant run-system-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}'" />
+            <arg line="ssh -c 'sudo ant local-run-system-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}' -- -t -t" />
         </exec>
         <!-- invoke original integration tests within vagrant box -->
         <exec dir="${temp.dir}" executable="vagrant" errorproperty="performance-test.failed">
-            <arg line="ssh -c 'sudo ant run-performance-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}'" />
+            <arg line="ssh -c 'sudo ant local-run-performance-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}' -- -t -t" />
         </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Runs all available tests from all included test files within a       -->
+    <!-- vagrant machine                                                      -->
+    <!-- ==================================================================== -->
+    <target name="run-tests">
+        <!-- start our vagrant box -->
+        <antcall target="start-vagrant-test-box" />
+        <!-- do the actual testing -->
+        <antcall target="vagrant-run-tests" />
         <!-- destroy the box after all work is done -->
         <antcall target="destroy-vagrant-box" />
         
