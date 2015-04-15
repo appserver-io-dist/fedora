@@ -378,7 +378,7 @@
     <target name="vagrant-build">
         <!-- invoke original build target within vagrant box -->
         <exec dir="${temp.dir}" executable="vagrant" errorproperty="build.failed">
-            <arg line="ssh -c 'sudo ant local-build -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}' -- -t -t" />
+            <arg line="ssh -c 'sudo ant local-build -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version} -Dappserver.runtime.version=${appserver.runtime.version} -Dappserver.runtime.build=${appserver.runtime.build}' -- -t -t" />
         </exec>
     </target>
 
