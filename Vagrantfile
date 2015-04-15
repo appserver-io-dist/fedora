@@ -12,13 +12,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Basic network configuration
   config.vm.host_name = "${vagrant-box.name}"
-  # Required for NFS to work, pick any local IP
-  config.vm.network :private_network, ip: '192.168.50.50'
   # Use NFS for shared folders for better performance
-  config.vm.synced_folder "${basedir}", "${vagrant.basedir}", nfs: true
-  config.vm.synced_folder "${build.dir}", "${vagrant-build.dir}", nfs: true
-  config.vm.synced_folder "${reports.dir}", "${vagrant-reports.dir}", nfs: true
-  config.vm.synced_folder "${src.dir}", "${vagrant-src.dir}", nfs: true
+  config.vm.synced_folder "${basedir}", "${vagrant.basedir}"
+  config.vm.synced_folder "${build.dir}", "${vagrant-build.dir}"
+  config.vm.synced_folder "${reports.dir}", "${vagrant-reports.dir}"
+  config.vm.synced_folder "${src.dir}", "${vagrant-src.dir}"
 
   # Shell provisioning
   config.vm.provision "shell", path: "provision.sh"
