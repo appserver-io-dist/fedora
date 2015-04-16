@@ -51,7 +51,7 @@
     <target name="vagrant-run-system-tests">
         <!-- invoke original system tests within vagrant box -->
         <exec dir="${temp.dir}" executable="vagrant" errorproperty="system-test.failed">
-            <arg line="ssh -c 'sudo ant local-run-system-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}' -- -t -t" />
+            <arg line="ssh -c 'sudo ant local-run-system-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version} -Dappserver.runtime.version=${appserver.runtime.version} -Dappserver.runtime.build=${appserver.runtime.build}' -- -t -t" />
         </exec>
     </target>
 
