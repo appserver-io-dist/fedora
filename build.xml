@@ -85,7 +85,7 @@
         </exec>
         <!-- also add the github oauth token to the local installation -->
         <exec dir="${temp.dir}" executable="php">
-            <arg line="./composer.phar config github-oauth.github.com ${github.oauth.token}"/>
+            <arg line="./composer.phar config -g github-oauth.github.com ${github.oauth.token}"/>
         </exec>
     </target>
 
@@ -267,13 +267,8 @@
     <!-- Will check if a download of the appserver src is needed              -->
     <!-- ==================================================================== -->
     <target name="check-appserver-src-needed">
-        <!-- clone appserver src -->
-        <condition property="appserver.src.unneeded">
-            <or>
-                <available file="${temp.dir}/appserver-src" property="appserver.src.present"/>
-                <isset property="appserver.src.version"/>
-            </or>
-        </condition>
+        <!-- check if the appserver source is already present -->
+        <available file="${temp.dir}/appserver-src/.git" type="dir" property="appserver.src.unneeded"/>
     </target>
 
     <!-- ==================================================================== -->
