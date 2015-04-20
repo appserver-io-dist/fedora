@@ -50,10 +50,17 @@
         <!-- map the vagrant name according to the expected environment -->
         <property name="vagrant-box.name" value="${vagrant-box.prefix}Test" />
         <!-- invoke original system tests within vagrant box -->
-        <exec dir="${temp.dir}" executable="sh" errorproperty="fatal-error.occured">
+        <exec dir="${temp.dir}" executable="sh" errorproperty="test.failed">
             <arg value="-c" />
             <arg value='vagrant ssh-config | ssh -F /dev/stdin ${vagrant-box.name} "sudo ant local-run-system-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version} -Dappserver.runtime.version=${appserver.runtime.version} -Dappserver.runtime.build=${appserver.runtime.build}"' />
         </exec>
+        <!-- eliminate the possiblity of empty but existing error output -->
+        <property name="test.failed" value=""/>
+        <condition property="fatal-error.occured" value="${test.failed}">
+            <not>
+                <equals arg1="${test.failed}" arg2=""/>
+            </not>
+        </condition>
         <!-- check for a specific build failure and make an emergency destroy -->
         <antcall target="destroy-vagrant-box-on-error" />
         <!-- tell them about any failures we might encountered -->
@@ -128,7 +135,7 @@
         <!-- test if the example app exists in the webapps directory -->
         <echo message="Test if app 'example' has been deployed and flagged correctly." />
         <available file="${appserver-base.dir}/webapps/example/WEB-INF/web.xml" property="example_app.present"/>
-        <fail unless="example_app.present" message="Example app seem to not have been deployed correctly."/>
+        <fail unless="example_app.present" message="Example app seems to not have been deployed correctly."/>
         <!-- also test for the deploy flags -->
         <available file="${appserver-base.dir}/deploy/example.phar.deployed" property="example_deploy_flag.present"/>
         <fail unless="example_deploy_flag.present" message="Example app deployed but incorrect deploy flag."/>
@@ -160,7 +167,7 @@
             <arg line="start appserver-php5-fpm" />
         </exec>
 
-        <echo message="Starting seem to have gone well, test service states now" />
+        <echo message="Starting seems to have gone well, test service states now" />
 
         <!-- tests if the services are running -->
         <antcall target="test-services-running" />
@@ -183,7 +190,7 @@
             <arg line="restart appserver-php5-fpm" />
         </exec>
 
-        <echo message="Restart seem to have gone well, test service states now" />
+        <echo message="Restart seems to have gone well, test service states now" />
 
         <!-- tests if the services are running -->
         <antcall target="test-services-running" />
@@ -206,7 +213,7 @@
             <arg line="stop appserver-php5-fpm" />
         </exec>
 
-        <echo message="Stopping seem to have gone well, test service states now" />
+        <echo message="Stopping seems to have gone well, test service states now" />
 
         <!-- tests if the services are running -->
         <antcall target="test-services-stopped" />
