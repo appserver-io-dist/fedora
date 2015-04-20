@@ -166,11 +166,9 @@
     <!-- Will destroy any running vagrant box within our tmp directory if     -->
     <!-- there has been an error before                                       -->
     <!-- ==================================================================== -->
-    <target name="destroy-vagrant-box-on-error" depends="test-vagrant-box-running" if="fatal-error.occured" unless="vagrant-box.not-running">
-        <!-- issue the actual destroy command -->
-        <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
-            <arg line="destroy -f" />
-        </exec>
+    <target name="destroy-vagrant-box-on-error" if="fatal-error.occured" unless="${vagrant-box.error-resistant}">
+        <!-- forward to the destroy command -->
+        <antcall target="destroy-vagrant-box" />
     </target>
 
     <!-- ==================================================================== -->
