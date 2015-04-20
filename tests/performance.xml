@@ -21,18 +21,23 @@
         <antcall target="vagrant-run-performance-tests" />
         <!-- destroy the box after all work is done -->
         <antcall target="destroy-vagrant-box" />
-        <!-- tell them about any failures we might encountered -->
-        <fail if="system-test.failed" message="The performance tests failed with message '${performance-test.failed}', see log above." />
     </target>
 
     <!-- ==================================================================== -->
     <!-- Runs all available performance tests within an expected vagrant VM   -->
     <!-- ==================================================================== -->
     <target name="vagrant-run-performance-tests">
+        <!-- map the vagrant name according to the expected environment -->
+        <property name="vagrant-box.name" value="${vagrant-box.prefix}Test" />
         <!-- invoke original performance tests within vagrant box -->
-        <exec dir="${temp.dir}" executable="vagrant" errorproperty="performance-test.failed">
-            <arg line="ssh -c 'sudo ant local-run-performance-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}' -- -t -t" />
+        <exec dir="${temp.dir}" executable="sh" errorproperty="fatal-error.occured">
+            <arg value="-c" />
+            <arg value='vagrant ssh-config | ssh -F /dev/stdin ${vagrant-box.name} "sudo ant local-run-performance-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.major.version=${target-os.major.version} -Dtarget-os.minor.version=${target-os.minor.version} -Dappserver.runtime.version=${appserver.runtime.version} -Dappserver.runtime.build=${appserver.runtime.build}"' />
         </exec>
+        <!-- check for a specific build failure and make an emergency destroy -->
+        <antcall target="destroy-vagrant-box-on-error" />
+        <!-- tell them about any failures we might encountered -->
+        <fail if="fatal-error.occured" message="The performance test failed with message '${fatal-error.occured}', see log above." />
     </target>
 
     <!-- ==================================================================== -->

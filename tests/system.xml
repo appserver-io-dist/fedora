@@ -41,18 +41,23 @@
         <antcall target="vagrant-run-system-tests" />
         <!-- destroy the box after all work is done -->
         <antcall target="destroy-vagrant-box" />
-        <!-- tell them about any failures we might encountered -->
-        <fail if="system-test.failed" message="The system tests failed with message '${system-test.failed}', see log above." />
     </target>
-    
+
     <!-- ==================================================================== -->
     <!-- Runs all available system tests within an expected vagrant box       -->
     <!-- ==================================================================== -->
     <target name="vagrant-run-system-tests">
+        <!-- map the vagrant name according to the expected environment -->
+        <property name="vagrant-box.name" value="${vagrant-box.prefix}Test" />
         <!-- invoke original system tests within vagrant box -->
-        <exec dir="${temp.dir}" executable="vagrant" errorproperty="system-test.failed">
-            <arg line="ssh -c 'sudo ant local-run-system-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}' -- -t -t" />
+        <exec dir="${temp.dir}" executable="sh" errorproperty="fatal-error.occured">
+            <arg value="-c" />
+            <arg value='vagrant ssh-config | ssh -F /dev/stdin ${vagrant-box.name} "sudo ant local-run-system-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.major.version=${target-os.major.version} -Dtarget-os.minor.version=${target-os.minor.version} -Dappserver.runtime.version=${appserver.runtime.version} -Dappserver.runtime.build=${appserver.runtime.build}"' />
         </exec>
+        <!-- check for a specific build failure and make an emergency destroy -->
+        <antcall target="destroy-vagrant-box-on-error" />
+        <!-- tell them about any failures we might encountered -->
+        <fail if="fatal-error.occured" message="The system test failed with message '${fatal-error.occured}', see log above." />
     </target>
 
     <!-- ==================================================================== -->
@@ -236,12 +241,23 @@
     <target name="test-errors-log-exists">
         <!-- test if a php_errors.log file has been created -->
         <echo message="Test for existence of 'php_errors.log' log file." />
-        <available file="${appserver-base.dir}/var/log/php_errors.log" property="php_errors.present"/>
-        <fail if="php_errors.present" message="php_errors.log file has been created."/>
+        <available file="${appserver-base.dir}/var/log/php_errors.log" property="php_errors.log.present"/>
+        <!-- trigger a reaction according to the status of the log file -->
+        <antcall target="react-on-errors-log-exists" />
     </target>
     
+
     <!-- ==================================================================== -->
-    <!-- Tests if the packaged executables exist                             -->
+    <!-- Triggers the reaction to an existing error log                       -->
+    <!-- ==================================================================== -->
+    <target name="react-on-errors-log-exists" if="php_errors.log.present">
+        <!-- print the content of the log file and fail -->
+        <loadfile property="php_errors.log.content" srcFile="${appserver-base.dir}/var/log/php_errors.log" failonerror="false"/>
+        <fail if="php_errors.log.present" message="php_errors.log file has been created. Content is as follows: ${php_errors.log.content}"/>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the packaged executables exist                              -->
     <!-- ==================================================================== -->
     <target name="test-executable-exist">
         <!-- test if a composer binary and ecexutable is present -->

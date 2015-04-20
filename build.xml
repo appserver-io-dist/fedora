@@ -83,22 +83,57 @@
         <exec dir="${temp.dir}" executable="php">
             <arg value="composer-installer" />
         </exec>
-    </target>
-
-    <!-- ==================================================================== -->
-    <!-- Will test if the targeted box is already started                     -->
-    <!-- ==================================================================== -->
-    <target name="test-vagrant-box-started">
-        <!-- issue the actual command -->
-        <exec dir="${temp.dir}" executable="vagrant" errorproperty="vagrant.box.not-started">
-            <arg line="ssh ${vagrant-box.name}" />
+        <!-- also add the github oauth token to the local installation -->
+        <exec dir="${temp.dir}" executable="php">
+            <arg line="./composer.phar config github-oauth.github.com ${github.oauth.token}"/>
         </exec>
     </target>
 
     <!-- ==================================================================== -->
+    <!-- Will test if the targeted box is already up and running.             -->
+    <!-- Will set the properties "vagrant-box.running" or                     -->
+    <!-- "vagrant-box.not-running" depending on the result                    -->
+    <!-- ==================================================================== -->
+    <target name="test-vagrant-box-running">
+        <!-- issue the actual command -->
+        <exec dir="${temp.dir}" executable="vagrant" outputproperty="vagrant-box.status">
+            <arg value="status" />
+        </exec>
+        <parse-vagrant-box-status status="${vagrant-box.status}" boxname="${vagrant-box.name}" />
+        <condition property="vagrant-box.not-running">
+            <isset property="BOX_NOT_RUNNING"/>
+        </condition>
+        <condition property="vagrant-box.running">
+            <isset property="BOX_RUNNING"/>
+        </condition>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will split a string at the "-" character                             -->
+    <!-- ==================================================================== -->
+    <scriptdef name="parse-vagrant-box-status" language="javascript">
+        <attribute name="status"/>
+        <attribute name="boxname"/>
+        <![CDATA[
+        // getting the params
+        var status = attributes.get("status");
+        var boxName = attributes.get("boxname");
+
+        // check the occurence of a certain run indicator
+        if (status.indexOf(boxName + " running") > -1) {
+            project.setProperty("BOX_RUNNING", true);
+        } else {
+            project.setProperty("BOX_NOT_RUNNING", true);
+        }
+    ]]>
+    </scriptdef>
+
+    <!-- ==================================================================== -->
     <!-- Will start a vagrant box within the tmp directory                    -->
     <!-- ==================================================================== -->
-    <target name="start-vagrant-box" depends="test-vagrant-box-started" if="vagrant.box.not-started">
+    <target name="start-vagrant-box" depends="test-vagrant-box-running" if="vagrant-box.not-running">
+        <!-- tell the user we need the box name first -->
+        <fail unless="vagrant-box.name" message="Please specify the type of box to start e.g. using 'ant start-vagrant-build-box'" />
         <!-- issue the actual start command -->
         <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
             <arg line="up ${vagrant-box.name} --provider=${vagrant.provider} --destroy-on-error" />
@@ -120,7 +155,18 @@
     <!-- ==================================================================== -->
     <!-- Will destroy any running vagrant box within our tmp directory        -->
     <!-- ==================================================================== -->
-    <target name="destroy-vagrant-box">
+    <target name="destroy-vagrant-box" depends="test-vagrant-box-running" unless="vagrant-box.not-running">
+        <!-- issue the actual destroy command -->
+        <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
+            <arg line="destroy -f" />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will destroy any running vagrant box within our tmp directory if     -->
+    <!-- there has been an error before                                       -->
+    <!-- ==================================================================== -->
+    <target name="destroy-vagrant-box-on-error" depends="test-vagrant-box-running" if="fatal-error.occured" unless="vagrant-box.not-running">
         <!-- issue the actual destroy command -->
         <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
             <arg line="destroy -f" />
@@ -149,9 +195,6 @@
         <echo file="${target.dir}/src${appserver-base.dir}/etc/appserver/.release-version" message="${appserver.src.semver}-${build.number}${appserver.src.suffix}" />
         <!-- install dependencies via composer and let postinstall-scripts proceed -->
         <echo message="Installing composer dependencies" />
-        <exec dir="${target.dir}/src${appserver-base.dir}" executable="php">
-            <arg line="${temp.dir}/composer.phar config github-oauth.github.com ${github.oauth.token}"/>
-        </exec>
         <exec dir="${target.dir}/src${appserver-base.dir}" executable="php">
             <arg line="${temp.dir}/composer.phar install --prefer-dist --no-dev --no-interaction --ignore-platform-reqs --optimize-autoloader"/>
         </exec>
@@ -367,19 +410,24 @@
         <!-- start the build in the box -->
         <antcall target="vagrant-build" />
         <!-- destroy the box after all work is done -->
-        <antcall target="destroy-vagrant-box" />
-        <!-- tell them about any failures we might encountered -->
-        <fail if="build.failed" message="The build failed with message '${build.failed}', see log above." />
+        <antcall target="destroy-vagrant-box" />   
     </target>
 
     <!-- ==================================================================== -->
     <!-- Creates all RPM packages within an existing vagrant box              -->
     <!-- ==================================================================== -->
     <target name="vagrant-build">
+        <!-- map the vagrant name according to the expected environment -->
+        <property name="vagrant-box.name" value="${vagrant-box.prefix}Build" />
         <!-- invoke original build target within vagrant box -->
-        <exec dir="${temp.dir}" executable="vagrant" errorproperty="build.failed">
-            <arg line="ssh -c 'sudo ant local-build -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version} -Dappserver.runtime.build=${appserver.runtime.build}' -- -t -t" />
+        <exec dir="${temp.dir}" executable="sh" errorproperty="fatal-error.occured">
+            <arg value="-c" />
+            <arg value='vagrant ssh-config | ssh -F /dev/stdin ${vagrant-box.name} "sudo ant local-build -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.major.version=${target-os.major.version} -Dtarget-os.minor.version=${target-os.minor.version} -Dappserver.runtime.version=${appserver.runtime.version} -Dappserver.runtime.build=${appserver.runtime.build}"' />
         </exec>
+        <!-- check for a specific build failure and make an emergency destroy -->
+        <antcall target="destroy-vagrant-box-on-error" />
+        <!-- tell them about any failures we might encountered -->
+        <fail if="fatal-error.occured" message="The build failed with message '${fatal-error.occured}', see log above." />
     </target>
 
     <!-- ==================================================================== -->
@@ -405,14 +453,10 @@
     <!-- vagrant machine                                                      -->
     <!-- ==================================================================== -->
     <target name="vagrant-run-tests">
-        <!-- invoke original integration tests within vagrant box -->
-        <exec dir="${temp.dir}" executable="vagrant" errorproperty="system-test.failed">
-            <arg line="ssh -c 'sudo ant local-run-system-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}' -- -t -t" />
-        </exec>
-        <!-- invoke original integration tests within vagrant box -->
-        <exec dir="${temp.dir}" executable="vagrant" errorproperty="performance-test.failed">
-            <arg line="ssh -c 'sudo ant local-run-performance-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version}' -- -t -t" />
-        </exec>
+        <!-- run the system tests within the assumed box -->
+        <antcall target="vagrant-run-system-tests" />
+        <!-- run the performance tests within the assumed box -->
+        <antcall target="vagrant-run-performance-tests" />
     </target>
 
     <!-- ==================================================================== -->
