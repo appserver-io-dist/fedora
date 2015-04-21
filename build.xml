@@ -109,23 +109,23 @@
     </target>
 
     <!-- ==================================================================== -->
-    <!-- Will split a string at the "-" character                             -->
+    <!-- Will parse a vagrant box status to look for the "running" state.     -->
+    <!-- Will set BOX_RUNNING if found, BOX_NOT_RUNNING if otherwise          -->
     <!-- ==================================================================== -->
     <scriptdef name="parse-vagrant-box-status" language="javascript">
         <attribute name="status"/>
         <attribute name="boxname"/>
         <![CDATA[
-        // getting the params
-        var status = attributes.get("status");
-        var boxName = attributes.get("boxname");
-
-        // check the occurence of a certain run indicator
-        if (status.indexOf(boxName + " running") > -1) {
-            project.setProperty("BOX_RUNNING", true);
-        } else {
-            project.setProperty("BOX_NOT_RUNNING", true);
-        }
-    ]]>
+            // getting the params
+            var status = attributes.get("status");
+            var boxName = attributes.get("boxname");
+            // check the occurence of a certain run indicator
+            if (status.indexOf(boxName + " running") > -1) {
+                project.setProperty("BOX_RUNNING", true);
+            } else {
+                project.setProperty("BOX_NOT_RUNNING", true);
+            }
+        ]]>
     </scriptdef>
 
     <!-- ==================================================================== -->
