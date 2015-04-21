@@ -320,8 +320,8 @@
             // getting the params
             var output = attributes.get("output");
             // check if there is an error percentage higher than 0.00%
-            //var regexp = new RegExp('\([1-9][0-9].[0-9]+%\)|\([1-9]+.[0-9]+%\)|\([0-9]+.[1-9][0-9]%\)|\([0-9]+.[0-9][1-9]%\)', 'm');
-            if (output.indexOf('test') > -1) {
+            var regexp = new RegExp('\([1-9][0-9].[0-9]+%\)|\([1-9]+.[0-9]+%\)|\([0-9]+.[1-9][0-9]%\)|\([0-9]+.[0-9][1-9]%\)', 'm');
+            if (output.search(regexp) > -1) {
                 project.setProperty("JMETER_HAS_ERRORS", true);
             } else {
                 project.setProperty("JMETER_NO_ERRORS", true);
