@@ -27,11 +27,6 @@
     <!-- ==================================================================== -->
     <import file="tests/test.xml"/>
 
-    <!-- ==================================================================== -->
-    <!-- Import the package build files if they are present                   -->
-    <!-- ==================================================================== -->
-    <import file="${package.dir}/common.xml" optional="true"/>
-
     <!-- initialize the library specific properties -->
     <property name="codepool" value="vendor"/>
 
@@ -39,6 +34,11 @@
     <property name="dependency.dir" value ="${basedir}/${codepool}" />
     <property name="package.dir" value="${dependency.dir}/package" />
     <property name="package.remote-location" value="https://github.com/wick-ed/package.git" />
+
+    <!-- ==================================================================== -->
+    <!-- Import the package build files if they are present                   -->
+    <!-- ==================================================================== -->
+    <import file="${package.dir}/common.xml" optional="true" />
 
     <!-- ==================================================================== -->
     <!-- Cleans the target directories                                        -->
