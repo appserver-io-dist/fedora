@@ -135,9 +135,20 @@
         <!-- tell the user we need the box name first -->
         <fail unless="vagrant-box.name" message="Please specify the type of box to start e.g. using 'ant start-vagrant-build-box'" />
         <!-- issue the actual start command -->
-        <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
+        <exec dir="${temp.dir}" executable="vagrant" errorproperty="vagrant-box.start.failed">
             <arg line="up ${vagrant-box.name} --provider=${vagrant.provider} --destroy-on-error" />
         </exec>
+        <!-- eliminate the possiblity of empty but existing error output -->
+        <property name="vagrant-box.start.failed" value=""/>
+        <condition property="fatal-error.occured" value="${vagrant-box.start.failed}">
+            <not>
+                <equals arg1="${vagrant-box.start.failed}" arg2=""/>
+            </not>
+        </condition>
+        <!-- check for a specific build failure and make an emergency destroy -->
+        <antcall target="destroy-vagrant-box-on-error" />
+        <!-- tell them about any failures we might encountered -->
+        <fail if="fatal-error.occured" message="Starting the vagrant box failed! Error message was: '${fatal-error.occured}', also see log above." />
     </target>
 
     <!-- ==================================================================== -->
@@ -155,7 +166,7 @@
     <!-- ==================================================================== -->
     <!-- Will destroy any running vagrant box within our tmp directory        -->
     <!-- ==================================================================== -->
-    <target name="destroy-vagrant-box" depends="test-vagrant-box-running" unless="vagrant-box.not-running">
+    <target name="destroy-vagrant-box">
         <!-- issue the actual destroy command -->
         <exec dir="${temp.dir}" executable="vagrant" failonerror="true">
             <arg line="destroy -f" />
