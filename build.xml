@@ -28,7 +28,7 @@
     <!-- initialize the directory where we can find the real build files -->
     <property name="dependency.dir" value ="${basedir}/${codepool}" />
     <property name="package.dir" value="${dependency.dir}/package" />
-    <property name="package.remote-location" value="https://github.com/wick-ed/package.git" />
+    <property name="package.remote-location" value="https://github.com/appserver-io-dist/package.git" />
 
     <!-- ==================================================================== -->
     <!-- Import the local tests/*files                                        -->
@@ -111,22 +111,54 @@
     </target>
 
     <!-- ==================================================================== -->
-    <!-- Interface to the dependency "prepare-src-version-parts" target       -->
+    <!-- Will check if a download of the appserver src is needed              -->
     <!-- ==================================================================== -->
-    <target name="get-src-version-parts">
-        <!-- prepare the version parts based on the latest tag on the sources -->
-        <antcall target="prepare-src-version-parts" />
+    <target name="check-appserver-src-needed">
+        <!-- check if the appserver source is already present -->
+        <available file="${temp.dir}/appserver-src/.git" type="dir" property="appserver.src.unneeded"/>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will download the appserver src unless it is not needed              -->
+    <!-- ==================================================================== -->
+    <target name="get-appserver-src" depends="check-appserver-src-needed" unless="appserver.src.unneeded">
+        <!-- clone appserver src -->
+        <exec dir="${temp.dir}" executable="git">
+            <arg line="clone https://${github.oauth.token}:x-oauth-basic@github.com/${appserver.src.repo} appserver-src" />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will provide the appserver.src.version property if not defined       -->
+    <!-- already                                                              -->
+    <!-- ==================================================================== -->
+    <target name="get-appserver-src-version" depends="get-appserver-src">
+        <!-- get lastest tag version -->
+        <exec dir="${temp.dir}/appserver-src" executable="git" outputProperty="appserver.src.version">
+            <arg line="describe --abbrev=0 --tags" />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will split the github tag into a semver version (e.g. 1.0.0) and a   -->
+    <!-- suffix (e.g. beta)                                                   -->
+    <!-- ==================================================================== -->
+    <target name="prepare-src-version-parts" depends="get-appserver-src-version">
+        <!-- filter the version string -->
+        <filter-version param="${appserver.src.version}" />
+        <property name="appserver.src.semver" value="${RESULT_VERSION}" />
+        <property name="appserver.src.suffix" value="${RESULT_BUILD-NUMBER}" />
     </target>
 
     <!-- ==================================================================== -->
     <!-- Prepares the appserver sources                                       -->
     <!-- ==================================================================== -->
-    <target name="prepare-appserver-dist" depends="prepare, get-src-version-parts">
+    <target name="prepare-appserver-dist" depends="prepare, prepare-src-version-parts">
         <!-- install local composer -->
         <antcall target="install-composer" />
         <!-- tell them what we do here -->
-        <echo message="Checkout lastest tag version ${appserver.src.version}" />
-        <!-- checkout lastest tag version -->
+        <echo message="Checkout latest tag version ${appserver.src.version}" />
+        <!-- checkout latest tag version -->
         <exec dir="${temp.dir}/appserver-src" executable="git">
             <arg line="checkout -q ${appserver.src.version}" />
         </exec>
@@ -152,7 +184,7 @@
     <!-- ==================================================================== -->
     <!-- Creates a RPM package with the appserver sources                     -->
     <!-- ==================================================================== -->
-    <target name="create-appserver-dist-rpm" depends="prepare-appserver-dist, get-src-version-parts" description="Creates a RPM package with appserver sources">
+    <target name="create-appserver-dist-rpm" depends="prepare-appserver-dist, prepare-src-version-parts" description="Creates a RPM package with appserver sources">
         <!-- copy packaging build files to target -->
         <copy todir="${target.dir}/src">
             <fileset dir="${src.dir}/dist">
@@ -212,7 +244,7 @@
     <!-- Moves the freshly built files from the RPM build directory to the    -->
     <!-- jenkins one                                                          -->
     <!-- ==================================================================== -->
-    <target name="move-build-files" depends="get-src-version-parts">
+    <target name="move-build-files" depends="prepare-src-version-parts">
         <!-- move the files -->
         <move file="${package.specific.dir}/${appserver.runtime.package}.rpm" todir="${build.dir}" failonerror="true"/>
         <move file="${package.specific.dir}/${build.name.prefix}dist-${appserver.src.semver}-${build.number}${appserver.src.suffix}.${os.version.prefix}${target-os.version}.${os.architecture}.rpm" todir="${build.dir}" failonerror="true"/>
