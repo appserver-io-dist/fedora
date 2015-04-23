@@ -22,11 +22,6 @@
     <property name="temp.dir" value="${basedir}/tmp" />
     <property name="reports.dir" value="${basedir}/reports" />
 
-    <!-- ==================================================================== -->
-    <!-- Import the local tests/*files                                        -->
-    <!-- ==================================================================== -->
-    <import file="tests/test.xml"/>
-
     <!-- initialize the library specific properties -->
     <property name="codepool" value="vendor"/>
 
@@ -34,6 +29,11 @@
     <property name="dependency.dir" value ="${basedir}/${codepool}" />
     <property name="package.dir" value="${dependency.dir}/package" />
     <property name="package.remote-location" value="https://github.com/wick-ed/package.git" />
+
+    <!-- ==================================================================== -->
+    <!-- Import the local tests/*files                                        -->
+    <!-- ==================================================================== -->
+    <import file="tests/test.xml"/>
 
     <!-- ==================================================================== -->
     <!-- Import the package build files if they are present                   -->
@@ -247,6 +247,7 @@
             <fileset dir="${basedir}">
                <include name="build.*"/>
                <include name="tests/*"/>
+               <include name="${codepool}/**"/>
                <exclude name="tests/provision.sh"/>
             </fileset>
         </copy>
