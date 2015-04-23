@@ -170,6 +170,10 @@
         <delete dir="${target.dir}/src${appserver-base.dir}/.git" includeemptydirs="true" />
         <!-- create the file with the version number -->
         <echo file="${target.dir}/src${appserver-base.dir}/etc/appserver/.release-version" message="${appserver.src.semver}-${build.number}${appserver.src.suffix}" />
+        <!-- also add the github oauth token to the local installation -->
+        <exec dir="${temp.dir}" executable="php">
+        + <arg line="./composer.phar config -g github-oauth.github.com ${github.oauth.token}"/>
+        + </exec>
         <!-- install dependencies via composer and let postinstall-scripts proceed -->
         <echo message="Installing composer dependencies" />
         <exec dir="${target.dir}/src${appserver-base.dir}" executable="php">
