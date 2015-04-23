@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project>
-<project name="appserver-io-dist/fedora-tests" basedir=".." default="prepare-test-environment">
+<project name="appserver-io-dist/fedora-tests" basedir="..">
 
     <!-- Read in tests property files -->
     <property file="${basedir}/tests/tests.properties"/>
@@ -67,39 +67,6 @@
     <!-- ==================================================================== -->
     <target name="test-dist-installed">
         <available file="${appserver-base.dir}/server.php" property="appserver.dist.installed"/>
-    </target>
-
-    <!-- ==================================================================== -->
-    <!-- Will prepare the environment to run a testing vagrant box in         -->
-    <!-- ==================================================================== -->
-    <target name="prepare-test-environment" depends="prepare, clean-reports">
-        <copy todir="${temp.dir}" failonerror="true">
-            <fileset dir="${basedir}">
-                <include name="build.*"/>
-                <include name="tests/*"/>
-                <include name="${codepool}/**"/>
-                <exclude name="tests/provision.sh"/>
-            </fileset>
-        </copy>
-        <!-- expand the properties within our box configuration -->
-        <copy todir="${temp.dir}" failonerror="true">
-            <fileset dir="${tests.dir}">
-                <include name="provision.sh"/>
-            </fileset>
-            <filterchain>
-                <expandproperties/>
-            </filterchain>
-        </copy>
-        <copy todir="${temp.dir}" failonerror="true">
-            <fileset dir="${basedir}">
-                <include name="Vagrantfile"/>
-            </fileset>
-            <filterchain>
-                <expandproperties/>
-            </filterchain>
-        </copy>
-        <!-- prepare a tmp dir for work within the VM -->
-        <mkdir dir="${temp.dir}/tmp" />
     </target>
 
     <!-- ==================================================================== -->

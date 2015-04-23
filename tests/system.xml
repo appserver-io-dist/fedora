@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project>
-<project name="appserver-io-dist/fedora-tests-system" basedir=".." default="run-system-tests">
+<project name="appserver-io-dist/fedora-tests-system" basedir="..">
 
     <!-- ==================================================================== -->
     <!-- Runs all available system tests within an expected vagrant box       -->
