@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project>
-<project name="appserver-io-dist/fedora" basedir="." default="build">
+<project name="appserver-io-dist/fedora" basedir="." default="dependencies-init">
 
     <!-- Readin enviroment properties to env property -->
     <property environment="env" />
@@ -10,7 +10,7 @@
         <format property="time.stamp" pattern="yyyy.MM.dd.HHmmss"/>
     </tstamp>
 
-    <!-- Readin build property files -->
+    <!-- Read in build property files -->
     <property file="${basedir}/build.properties"/>
     <property file="${basedir}/build.default.properties"/>
 
@@ -18,7 +18,27 @@
     <property name="src.dir" value="${basedir}/src" />
     <property name="target.dir" value="${basedir}/target" />
     <property name="build.dir" value="${basedir}/build" />
+    <property name="tests.dir" value="${basedir}/tests" />
     <property name="temp.dir" value="${basedir}/tmp" />
+    <property name="reports.dir" value="${basedir}/reports" />
+
+    <!-- initialize the library specific properties -->
+    <property name="codepool" value="vendor"/>
+
+    <!-- initialize the directory where we can find the real build files -->
+    <property name="dependency.dir" value ="${basedir}/${codepool}" />
+    <property name="package.dir" value="${dependency.dir}/package" />
+    <property name="package.remote-location" value="https://github.com/appserver-io-dist/package.git" />
+
+    <!-- ==================================================================== -->
+    <!-- Import the local tests/*files                                        -->
+    <!-- ==================================================================== -->
+    <import file="tests/test.xml"/>
+
+    <!-- ==================================================================== -->
+    <!-- Import the package build files if they are present                   -->
+    <!-- ==================================================================== -->
+    <import file="${package.dir}/common.xml" optional="true" />
 
     <!-- ==================================================================== -->
     <!-- Cleans the target directories                                        -->
@@ -26,13 +46,6 @@
     <target name="clean">
         <delete dir="${target.dir}" includeemptydirs="true" quiet="false" verbose="false" failonerror="true"/>
         <delete dir="${temp.dir}" includeemptydirs="true" quiet="false" verbose="false" failonerror="true"/>
-    </target>
-
-    <!-- ==================================================================== -->
-    <!-- Cleans the build directories                                         -->
-    <!-- ==================================================================== -->
-    <target name="clean-build">
-        <delete dir="${build.dir}" includeemptydirs="true" quiet="false" verbose="false" failonerror="true"/>
     </target>
 
     <!-- ==================================================================== -->
@@ -44,56 +57,105 @@
     </target>
 
     <!-- ==================================================================== -->
+    <!-- Cleans the build directories                                         -->
+    <!-- ==================================================================== -->
+    <target name="clean-build"  depends="prepare-build">
+        <delete includeemptydirs="true" quiet="false" verbose="false" failonerror="true">
+            <fileset dir="${build.dir}" includes="**/*"/>
+        </delete>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Cleans the reports directories                                       -->
+    <!-- ==================================================================== -->
+    <target name="clean-reports"  depends="prepare-reports">
+        <delete includeemptydirs="true" quiet="false" verbose="false" failonerror="true">
+            <fileset dir="${reports.dir}" includes="**/*"/>
+        </delete>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Prepares the reports environment                                     -->
+    <!-- ==================================================================== -->
+    <target name="prepare-reports">
+        <mkdir dir="${reports.dir}" />
+    </target>
+
+    <!-- ==================================================================== -->
     <!-- Prepares the build environment                                       -->
     <!-- ==================================================================== -->
-    <target name="prepare-build" depends="clean-build">
+    <target name="prepare-build">
         <mkdir dir="${build.dir}" />
     </target>
 
     <!-- ==================================================================== -->
-    <!-- Installs composer in target directory                                -->
+    <!-- Checks if the package helper libary is present                       -->
     <!-- ==================================================================== -->
-    <target name="install-composer">
-        <get src="https://getcomposer.org/installer" dest="${temp.dir}/composer-installer" />
-        <exec dir="${temp.dir}" executable="php">
-            <arg value="composer-installer" />
+    <target name="package-library-present">
+        <!-- check for the existence of the most central file of the package library -->
+        <available file="${package.dir}/common.xml" property="package-library.present" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Loads all dependencies needed for the execution of build targets.    -->
+    <!-- Not to be confused with the loading of dependencies needed for the   -->
+    <!-- built packages!                                                      -->
+    <!-- ==================================================================== -->
+    <target name="dependencies-init" depends="package-library-present" unless="package-library.present">
+        <!-- create the target dir -->
+        <mkdir dir="${dependency.dir}" />
+        <!-- clone the latest version of our package library -->
+        <exec dir="${dependency.dir}" executable="git">
+            <arg line="clone ${package.remote-location}" />
         </exec>
     </target>
 
     <!-- ==================================================================== -->
-    <!-- Prepares the appserver sources                                       -->
+    <!-- Will check if a download of the appserver src is needed              -->
     <!-- ==================================================================== -->
-    <target name="prepare-appserver-dist" depends="prepare, prepare-src-version-parts">
-        <!-- install local composer -->
-        <antcall target="install-composer" />
-        <!-- tell them what we do here -->
-        <echo message="Checkout lastest tag version ${appserver.src.version}" />
-        <!-- checkout lastest tag version -->
-        <exec dir="${temp.dir}/appserver-src" executable="git">
-            <arg line="checkout -q ${appserver.src.version}" />
+    <target name="check-appserver-src-needed">
+        <!-- check if the appserver source is already present -->
+        <available file="${temp.dir}/appserver-src/.git" type="dir" property="appserver.src.unneeded"/>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will download the appserver src unless it is not needed              -->
+    <!-- ==================================================================== -->
+    <target name="get-appserver-src" depends="check-appserver-src-needed" unless="appserver.src.unneeded">
+        <!-- clone appserver src -->
+        <exec dir="${temp.dir}" executable="git">
+            <arg line="clone https://${github.oauth.token}:x-oauth-basic@github.com/${appserver.src.repo} appserver-src" />
         </exec>
-        <!-- move to target.dir -->
-        <move todir="${target.dir}/src/opt/appserver">
-            <fileset dir="${temp.dir}/appserver-src"/>
-        </move>
-        <!-- remove git db files -->
-        <delete dir="${target.dir}/src/opt/appserver/.git" includeemptydirs="true" />
-        <!-- create the file with the version number -->
-        <echo file="${target.dir}/src/opt/appserver/etc/appserver/.release-version" message="${appserver.src.semver}-${build.number}${appserver.src.suffix}" />
-        <!-- install dependencies via composer and let postinstall-scripts proceed -->
-        <exec dir="${target.dir}/src/opt/appserver" executable="php">
-            <arg line="${temp.dir}/composer.phar install --prefer-dist --no-dev --no-interaction --ignore-platform-reqs --optimize-autoloader"/>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will provide the appserver.src.version property if not defined       -->
+    <!-- already                                                              -->
+    <!-- ==================================================================== -->
+    <target name="get-appserver-src-version" depends="get-appserver-src">
+        <!-- get lastest tag version -->
+        <exec dir="${temp.dir}/appserver-src" executable="git" outputProperty="appserver.src.version">
+            <arg line="describe --abbrev=0 --tags" />
         </exec>
-        <!-- create deploy folder if not exists -->
-        <mkdir dir="${target.dir}/src/opt/appserver/deploy"/>
-        <!-- deploy example app by putting it into deploy folder of runtime -->
-        <get src="${appserver.apps.example.url}" dest="${target.dir}/src/opt/appserver/deploy/example.phar" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will split the github tag into a semver version (e.g. 1.0.0) and a   -->
+    <!-- suffix (e.g. beta)                                                   -->
+    <!-- ==================================================================== -->
+    <target name="prepare-src-version-parts" depends="get-appserver-src-version">
+        <!-- filter the version string -->
+        <filter-version param="${appserver.src.version}" />
+        <property name="appserver.src.semver" value="${RESULT_VERSION}" />
+        <property name="appserver.src.suffix" value="${RESULT_BUILD-NUMBER}" />
     </target>
 
     <!-- ==================================================================== -->
     <!-- Creates a RPM package with the appserver sources                     -->
     <!-- ==================================================================== -->
-    <target name="create-appserver-dist-rpm" depends="prepare-appserver-dist, prepare-src-version-parts" description="Creates a RPM package with appserver sources">
+    <target name="create-appserver-dist-rpm" depends="prepare-src-version-parts" description="Creates a RPM package with appserver sources">
+        <!-- prepare the dist creation -->
+        <antcall target="prepare-appserver-dist" />
         <!-- copy packaging build files to target -->
         <copy todir="${target.dir}/src">
             <fileset dir="${src.dir}/dist">
@@ -150,89 +212,65 @@
     </target>
 
     <!-- ==================================================================== -->
-    <!-- Will download the appserver src unless it is not needed              -->
-    <!-- ==================================================================== -->
-    <target name="get-appserver-src">
-        <!-- clone appserver src -->
-        <exec dir="${temp.dir}" executable="git">
-            <arg line="clone https://${github.oauth.token}:x-oauth-basic@github.com/${appserver.src.repo} appserver-src" />
-        </exec>
-    </target>
-
-    <!-- ==================================================================== -->
-    <!-- Will provide the appserver.src.version property if not defined       -->
-    <!-- already                                                              -->
-    <!-- ==================================================================== -->
-    <target name="get-appserver-src-version" depends="get-appserver-src">
-        <!-- get lastest tag version -->
-        <exec dir="${temp.dir}/appserver-src" executable="git" outputProperty="appserver.src.version">
-            <arg line="describe --abbrev=0 --tags" />
-        </exec>
-    </target>
-
-    <!-- ==================================================================== -->
-    <!-- Will split the github tag into a semver version (e.g. 1.0.0) and a   -->
-    <!-- suffix (e.g. beta)                                                   -->
-    <!-- ==================================================================== -->
-    <target name="prepare-src-version-parts" depends="get-appserver-src-version">
-        <!-- filter the version string -->
-        <filter-version param="${appserver.src.version}" />
-        <property name="appserver.src.semver" value="${RESULT_VERSION}" />
-        <property name="appserver.src.suffix" value="${RESULT_BUILD-NUMBER}" />
-    </target>
-
-    <!-- ==================================================================== -->
-    <!-- Will split a string at the "-" character                             -->
-    <!-- ==================================================================== -->
-    <scriptdef name="filter-version" language="javascript">
-        <attribute name="param"/>
-        <![CDATA[
-       // getting the param
-        var param = attributes.get("param");
-
-        // preset the return values
-        var resultVersion = param;
-        var resultBuildNumber = '';
-
-        // split if necessary
-        if (param.indexOf("-") !== -1) {
-
-           resultVersion = param.substring(0, param.indexOf("-"));
-           resultBuildNumber = param.replace(resultVersion + "-", ".");
-        }
-
-        // store the result in new properties
-        project.setProperty("RESULT_VERSION", resultVersion);
-        project.setProperty("RESULT_BUILD-NUMBER", resultBuildNumber);
-    ]]>
-    </scriptdef>
-
-    <!-- ==================================================================== -->
     <!-- Moves the freshly built files from the RPM build directory to the    -->
     <!-- jenkins one                                                          -->
     <!-- ==================================================================== -->
     <target name="move-build-files" depends="prepare-src-version-parts">
         <!-- move the files -->
         <move file="${package.specific.dir}/${appserver.runtime.package}.rpm" todir="${build.dir}" failonerror="true"/>
-        <move file="${package.specific.dir}/${build.name.prefix}dist-${appserver.src.semver}-${build.number}${appserver.src.suffix}.${os.version}.${os.architecture}.rpm" todir="${build.dir}" failonerror="true"/>
+        <move file="${package.specific.dir}/${build.name.prefix}dist-${appserver.src.semver}-${build.number}${appserver.src.suffix}.${os.version.prefix}${target-os.version}.${os.architecture}.rpm" todir="${build.dir}" failonerror="true"/>
     </target>
 
     <!-- ==================================================================== -->
-    <!-- Copies any built package to the snapshot hosting server.             -->
+    <!-- Propagates the recent build to the official release sites, updates   -->
+    <!-- release lists, etc.. Not to be mistaken for the "publish" target     -->
     <!-- ==================================================================== -->
-    <target name="upload-builds" depends="move-build-files" description="Uploads any built package to the file-server.">
-        <echo message="Now try to upload all builds to file-server"/>
-        <exec executable="sh" failonerror="true">
+    <target name="release" description="Propagates the recent build to the official release sites, updates release lists, etc..">
+        <echo message="Now starting release cycle"/>
+        <!-- publish first -->
+        <antcall target="publish" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Publishes the recent build to any snapshot hubs, etc.. Not to be     -->
+    <!-- mistaken for the "release" target                                    -->
+    <!-- ==================================================================== -->
+    <target name="publish" description="Publishes the recent build to any snapshot hubs, etc..">
+        <echo message="Now starting publish cycle"/>
+        <!-- upload the build artifacts to the snapshot hub -->
+        <antcall target="copy-to-hub" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Creates all RPM packages within an existing vagrant box              -->
+    <!-- ==================================================================== -->
+    <target name="vagrant-build">
+        <!-- map the vagrant name according to the expected environment -->
+        <property name="vagrant-box.name" value="${vagrant-box.prefix}Build" />
+        <!-- invoke original build target within vagrant box -->
+        <exec dir="${temp.dir}" executable="sh" errorproperty="build.failed">
             <arg value="-c" />
-            <arg value="scp -o StrictHostKeyChecking=no -i ${user.home}/.ssh/id_rsa ${build.dir}/* ${build.server.user}@${build.server.host}:${build.server.upload-path}" />
+            <arg value='vagrant ssh-config | ssh -F /dev/stdin ${vagrant-box.name} "sudo ant local-build -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version} -Dappserver.runtime.version=${appserver.runtime.version} -Dappserver.runtime.build=${appserver.runtime.build}"' />
         </exec>
+        <!-- eliminate the possiblity of empty but existing error output -->
+        <property name="build.failed" value=""/>
+        <condition property="fatal-error.occured" value="${build.failed}">
+            <not>
+                <equals arg1="${build.failed}" arg2=""/>
+            </not>
+        </condition>
+        <!-- check for an explicit build failure and make an emergency destroy -->
+        <antcall target="destroy-vagrant-box-on-error" />
+        <!-- tell them about any failures we might encountered -->
+        <fail if="fatal-error.occured" message="The build failed with message '${fatal-error.occured}', see log above." />
     </target>
 
     <!-- ==================================================================== -->
-    <!-- Creates all RPM packages and uploads them to builds file-server      -->
+    <!-- Creates all RPM packages locally                                     -->
     <!-- ==================================================================== -->
-    <target name="build" depends="prepare-build, create-appserver-dist-rpm, create-appserver-runtime-rpm">
-        <!-- yet nothing special to do -->
+    <target name="local-build" depends="prepare-build, create-appserver-dist-rpm, create-appserver-runtime-rpm">
+        <!-- move the files we just prepared to the build dir -->
+        <antcall target="move-build-files" />
     </target>
 
 </project>
