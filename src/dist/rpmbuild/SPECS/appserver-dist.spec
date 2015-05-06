@@ -44,9 +44,6 @@ then
   ln -sf /lib/systemd/system/appserver-watcher.service /etc/systemd/system/appserver-watcher.service
   ln -sf /lib/systemd/system/appserver-php5-fpm.service /etc/systemd/system/appserver-php5-fpm.service
 
-  # Create composer symlink
-  ln -sf /opt/appserver/bin/composer.phar /opt/appserver/bin/composer
-
   # Start the appserver + watcher + fpm
   systemctl start appserver.service
   systemctl start appserver-watcher.service

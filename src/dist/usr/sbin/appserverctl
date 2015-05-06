@@ -17,7 +17,8 @@ DESC="appserverctl"
 ###
 configtest() {
     printf "%-50s" "Testing config of $NAME..."
-    echo `$DAEMON $DAEMON_OPTS -t`;
+    $DAEMON $DAEMON_OPTS -t;
+    exit $?
 }
 case "$1" in
     configtest)

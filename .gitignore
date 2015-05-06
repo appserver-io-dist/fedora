@@ -2,9 +2,11 @@
 /tmp
 /build
 /.idea
+.vagrant
 /.settings
 /.project
 .DS_Store
 ._.DS_Store
 build.properties
 *~
+/vendor
