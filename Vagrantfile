@@ -22,9 +22,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # config.vm.network :private_network, ip: '192.168.50.50'
 
   # Share some needed folders
-  config.vm.synced_folder "${build.dir}", "${vagrant-build.dir}"
-  config.vm.synced_folder "${reports.dir}", "${vagrant-reports.dir}"
-  config.vm.synced_folder "${src.dir}", "${vagrant-src.dir}"
+  config.vm.synced_folder "${build.dir}", "${vagrant-build.dir}", type: "rsync"
+  config.vm.synced_folder "${reports.dir}", "${vagrant-reports.dir}", type: "rsync"
+  config.vm.synced_folder "${src.dir}", "${vagrant-src.dir}", type: "rsync"
 
   # Shell provisioning used for intial setup of box.
   # Please use if packaged boxes are unavailable or unwelcome
