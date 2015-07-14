@@ -147,6 +147,11 @@
         <!-- filter the version string -->
         <filter-version param="${appserver.src.version}" />
         <property name="appserver.src.semver" value="${RESULT_VERSION}" />
+        <condition property="appserver.src.suffix" value=".${RESULT_BUILD-NUMBER}">
+            <not>
+                <equals arg1="${RESULT_BUILD-NUMBER}" arg2="" />
+            </not>
+        </condition>
         <property name="appserver.src.suffix" value="${RESULT_BUILD-NUMBER}" />
     </target>
 
